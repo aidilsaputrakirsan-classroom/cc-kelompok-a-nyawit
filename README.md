@@ -134,6 +134,3 @@ Mencatat riwayat penggunaan aset, terutama untuk perangkat *endpoint* (laptop), 
 ---
 *Proyek ini merupakan bagian dari tugas Cloud Computing Kelompok A Nyawit.*
 
-
----
-*Proyek ini merupakan bagian dari tugas Cloud Computing Kelompok A Nyawit.*
