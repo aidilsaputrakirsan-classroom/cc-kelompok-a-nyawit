@@ -41,3 +41,123 @@ Mencatat riwayat penggunaan aset, terutama untuk perangkat *endpoint* (laptop), 
 
 ---
 *Proyek ini merupakan bagian dari tugas Cloud Computing Kelompok A Nyawit.*
+
+## Backend API (FastAPI + PostgreSQL)
+
+Struktur backend tersedia di folder `backend/` dengan stack:
+- `FastAPI` untuk REST API
+- `SQLAlchemy` untuk ORM
+- `PostgreSQL` sebagai database utama
+
+### Fitur Backend yang Disediakan
+- CRUD kategori aset (`/api/v1/categories`)
+- CRUD aset IT (`/api/v1/assets`)
+- Log peminjaman dan pengembalian aset (`/api/v1/borrow-logs`)
+- Health check (`/api/v1/health`)
+
+### Struktur Folder
+```text
+backend/
+  app/
+    api/
+    core/
+    db/
+    models/
+    schemas/
+    main.py
+  database/
+    schema.sql
+  tests/
+    test_health.py
+  requirements.txt
+  .env.example
+  Dockerfile
+  docker-compose.yml
+```
+
+### Menjalankan Full Stack dengan Docker Compose (Recommended)
+
+1. Jalankan service API + PostgreSQL + pgAdmin:
+
+```bat
+cd backend
+docker compose up -d --build
+```
+
+1. Cek service berjalan:
+
+```bat
+docker compose ps
+```
+
+1. Buka URL service:
+
+- API: `http://127.0.0.1:8000`
+- Swagger: `http://127.0.0.1:8000/docs`
+- DB GUI (pgAdmin): `http://127.0.0.1:5050`
+
+1. Login pgAdmin:
+
+- Email: `admin@local.dev`
+- Password: `admin123`
+
+1. Tambah server PostgreSQL di pgAdmin dengan parameter:
+
+- Name: `it-asset-db`
+- Host: `postgres`
+- Port: `5432`
+- Username: `postgres`
+- Password: `postgres`
+- Database: `it_asset_db`
+
+1. Stop semua container:
+
+```bat
+docker compose down
+```
+
+Jika ingin sekaligus hapus volume data:
+
+```bat
+docker compose down -v
+```
+
+### Setup Menjalankan Backend
+
+1. Buat virtual environment lalu install dependency:
+
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+1. Siapkan database PostgreSQL:
+
+- Buat database bernama `it_asset_db`
+- Jalankan file SQL:
+
+```bash
+psql -U postgres -d it_asset_db -f database/schema.sql
+```
+
+Atau jalankan PostgreSQL via Docker:
+
+```bash
+docker compose up -d
+psql -h localhost -U postgres -d it_asset_db -f database/schema.sql
+```
+
+1. Buat file `.env` dari `.env.example`, lalu sesuaikan `DATABASE_URL` jika perlu.
+
+1. Jalankan API:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+1. Dokumentasi API:
+
+- Swagger UI: `http://127.0.0.1:8000/docs`
+- ReDoc: `http://127.0.0.1:8000/redoc`
