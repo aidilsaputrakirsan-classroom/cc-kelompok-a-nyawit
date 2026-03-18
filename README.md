@@ -23,7 +23,6 @@ Mengelompokkan perangkat untuk mempermudah manajemen dan pelaporan:
 Fitur untuk melacak di mana perangkat berada secara fisik.
 - **Lokasi Rak:** Penentuan nomor rak (U-position) di dalam *data center*.
 - **Lokasi Kantor:** Cabang, ruang kerja, atau gudang penyimpanan.
-- **Visualisasi Rak:** Membantu tim teknis menemukan perangkat dengan cepat saat dibutuhkan pemeliharaan fisik.
 
 ### 4. Pelacakan Status Barang
 Memantau siklus hidup aset secara *real-time*:
