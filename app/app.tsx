@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { LoginPage } from '@/pages/LoginPage';
 import { LeftNavigation, PageType } from '@/components/LeftNavigation';
 import { MobileNavigation } from '@/components/MobileNavigation';
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
@@ -10,6 +11,7 @@ import { ReportsPage, Report } from '@/pages/ReportsPage';
 import { AnalyticsPage } from '@/pages/AnalyticsPage';
 import { SettingsPage } from '@/pages/SettingsPage';
 import { LayoutDashboard } from 'lucide-react';
+import { AuthService } from '@/lib/auth';
 
 const defaultReports: Report[] = [
   {
@@ -323,9 +325,19 @@ const defaultReports: Report[] = [
 ];
 
 function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentPage, setCurrentPage] = useState<PageType>('inventory');
   const [reports, setReports] = useState<Report[]>([]);
 
+  // Check if user is already logged in on mount
+  useEffect(() => {
+    const isAuthenticated = AuthService.isAuthenticated();
+    if (isAuthenticated) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  // Load saved reports
   useEffect(() => {
     const savedReports = localStorage.getItem('asset-reports');
     if (savedReports) {
@@ -346,6 +358,12 @@ function App() {
     }
   }, [reports]);
 
+  const handleLogout = () => {
+    AuthService.logout();
+    setIsLoggedIn(false);
+    setCurrentPage('inventory');
+  };
+
   const renderPage = () => {
     switch (currentPage) {
       case 'inventory':
@@ -360,6 +378,10 @@ function App() {
         return <InventoryPage />;
     }
   };
+
+  if (!isLoggedIn) {
+    return <LoginPage onLogin={() => setIsLoggedIn(true)} />;
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F9FAFB' }}>
@@ -383,7 +405,7 @@ function App() {
               </div>
             </div>
             
-            <UserProfileDropdown />
+            <UserProfileDropdown onLogout={handleLogout} />
           </div>
         </header>
 
