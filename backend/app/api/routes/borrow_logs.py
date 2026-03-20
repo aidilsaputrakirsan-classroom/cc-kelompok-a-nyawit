@@ -4,17 +4,22 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_active_user, require_manager_or_admin
 from app.db.database import get_db
 from app.models.asset import Asset, AssetStatus
 from app.models.borrow_log import BorrowLog
+from app.models.user import User
 from app.schemas.borrow_log import BorrowLogCreate, BorrowLogRead, BorrowLogReturn
-
 
 router = APIRouter(prefix="/borrow-logs", tags=["Borrow Logs"])
 
 
 @router.post("", response_model=BorrowLogRead, status_code=status.HTTP_201_CREATED)
-def borrow_asset(payload: BorrowLogCreate, db: Session = Depends(get_db)) -> BorrowLog:
+def borrow_asset(
+    payload: BorrowLogCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_manager_or_admin),
+) -> BorrowLog:
     asset = db.get(Asset, payload.asset_id)
     if not asset:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Asset not found")
@@ -31,7 +36,12 @@ def borrow_asset(payload: BorrowLogCreate, db: Session = Depends(get_db)) -> Bor
 
 
 @router.post("/{borrow_log_id}/return", response_model=BorrowLogRead)
-def return_asset(borrow_log_id: int, payload: BorrowLogReturn, db: Session = Depends(get_db)) -> BorrowLog:
+def return_asset(
+    borrow_log_id: int,
+    payload: BorrowLogReturn,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_manager_or_admin),
+) -> BorrowLog:
     borrow_log = db.get(BorrowLog, borrow_log_id)
     if not borrow_log:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Borrow log not found")
@@ -54,12 +64,19 @@ def return_asset(borrow_log_id: int, payload: BorrowLogReturn, db: Session = Dep
 
 
 @router.get("", response_model=list[BorrowLogRead])
-def list_borrow_logs(db: Session = Depends(get_db)) -> list[BorrowLog]:
+def list_borrow_logs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> list[BorrowLog]:
     logs = db.scalars(select(BorrowLog).order_by(BorrowLog.borrowed_at.desc())).all()
     return list(logs)
 
 
 @router.get("/asset/{asset_id}", response_model=list[BorrowLogRead])
-def list_borrow_logs_by_asset(asset_id: int, db: Session = Depends(get_db)) -> list[BorrowLog]:
+def list_borrow_logs_by_asset(
+    asset_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> list[BorrowLog]:
     logs = db.scalars(select(BorrowLog).where(BorrowLog.asset_id == asset_id).order_by(BorrowLog.borrowed_at.desc())).all()
     return list(logs)

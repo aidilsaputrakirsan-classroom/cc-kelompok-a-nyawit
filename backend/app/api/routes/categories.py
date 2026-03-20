@@ -2,16 +2,21 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_active_user, require_manager_or_admin
 from app.db.database import get_db
 from app.models.category import Category
+from app.models.user import User
 from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
-
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
 
 
 @router.post("", response_model=CategoryRead, status_code=status.HTTP_201_CREATED)
-def create_category(payload: CategoryCreate, db: Session = Depends(get_db)) -> Category:
+def create_category(
+    payload: CategoryCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_manager_or_admin),
+) -> Category:
     exists = db.scalar(select(Category).where(Category.name == payload.name))
     if exists:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Category already exists")
@@ -24,13 +29,20 @@ def create_category(payload: CategoryCreate, db: Session = Depends(get_db)) -> C
 
 
 @router.get("", response_model=list[CategoryRead])
-def list_categories(db: Session = Depends(get_db)) -> list[Category]:
+def list_categories(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> list[Category]:
     categories = db.scalars(select(Category).order_by(Category.name.asc())).all()
     return list(categories)
 
 
 @router.get("/{category_id}", response_model=CategoryRead)
-def get_category(category_id: int, db: Session = Depends(get_db)) -> Category:
+def get_category(
+    category_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+) -> Category:
     category = db.get(Category, category_id)
     if not category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
@@ -38,7 +50,12 @@ def get_category(category_id: int, db: Session = Depends(get_db)) -> Category:
 
 
 @router.put("/{category_id}", response_model=CategoryRead)
-def update_category(category_id: int, payload: CategoryUpdate, db: Session = Depends(get_db)) -> Category:
+def update_category(
+    category_id: int,
+    payload: CategoryUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_manager_or_admin),
+) -> Category:
     category = db.get(Category, category_id)
     if not category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
@@ -58,7 +75,11 @@ def update_category(category_id: int, payload: CategoryUpdate, db: Session = Dep
 
 
 @router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_category(category_id: int, db: Session = Depends(get_db)) -> None:
+def delete_category(
+    category_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_manager_or_admin),
+) -> None:
     category = db.get(Category, category_id)
     if not category:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
