@@ -48,7 +48,7 @@ export function InventoryPage() {
   return (
     <>
       <div className="mb-4 md:mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold" style={{ color: '#111827' }}>Inventory</h1>
+        <h1 className="text-2xl md:text-3xl font-bold" style={{ color: '#111827' }}>Dashboard</h1>
         <p className="text-xs md:text-sm mt-1" style={{ color: '#6B7280' }}>
           Manage and track all assets in your organization
         </p>

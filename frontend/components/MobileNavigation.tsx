@@ -1,4 +1,4 @@
-import { Menu, X, LayoutDashboard, Package, FileText, BarChart3, Settings } from 'lucide-react';
+import { Menu, LayoutDashboard, ClipboardList, MapPin, Tag, Users } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,11 @@ interface MobileNavigationProps {
 }
 
 const navItems = [
-  { id: 'inventory', label: 'Inventory', icon: Package },
-  { id: 'reports', label: 'Reports', icon: FileText },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-  { id: 'settings', label: 'Settings', icon: Settings }
+  { id: 'inventory', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'asset-management', label: 'Manajemen Aset', icon: ClipboardList },
+  { id: 'location-management', label: 'Manajemen Lokasi', icon: MapPin },
+  { id: 'condition-management', label: 'Manajemen Kondisi', icon: Tag },
+  { id: 'user-management', label: 'Manajemen Pengguna', icon: Users },
 ];
 
 export function MobileNavigation({ currentPage, onPageChange }: MobileNavigationProps) {
@@ -27,11 +28,7 @@ export function MobileNavigation({ currentPage, onPageChange }: MobileNavigation
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="icon"
-          className="md:hidden"
-        >
+        <Button variant="ghost" size="icon" className="md:hidden">
           <Menu className="h-6 w-6" />
         </Button>
       </SheetTrigger>
@@ -47,30 +44,30 @@ export function MobileNavigation({ currentPage, onPageChange }: MobileNavigation
           </div>
         </SheetHeader>
 
-        <div className="p-4">
-          <nav className="space-y-1">
+        <div className="p-3">
+          <nav className="space-y-0.5">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.id;
-              
+
               return (
                 <button
                   key={item.id}
                   onClick={() => handlePageChange(item.id as PageType)}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all"
                   style={isActive ? {
                     backgroundColor: '#EFF6FF',
                     color: '#2563EB',
                     borderLeft: '3px solid #2563EB',
-                    paddingLeft: 'calc(1rem - 3px)'
+                    paddingLeft: 'calc(0.75rem - 3px)'
                   } : {
                     backgroundColor: 'transparent',
                     color: '#6B7280',
                     borderLeft: '3px solid transparent',
-                    paddingLeft: 'calc(1rem - 3px)'
+                    paddingLeft: 'calc(0.75rem - 3px)'
                   }}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-4 w-4 flex-shrink-0" />
                   <span>{item.label}</span>
                 </button>
               );
