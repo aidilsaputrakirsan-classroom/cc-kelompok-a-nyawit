@@ -1,48 +1,71 @@
-// Simple authentication utility for frontend
-// NOTE: This is a frontend-only implementation for demo purposes
-// In production, use proper backend authentication with JWT/OAuth
+// Authentication utility for frontend with backend integration
+
+const API_BASE_URL = 'http://localhost:8000/api/v1';
 
 export interface User {
+  id: number;
   email: string;
-  name: string;
+  username: string;
+  full_name: string | null;
   role: string;
+  is_active: boolean;
 }
-
-// Demo users for IT Division (all are admins)
-const DEMO_USERS = [
-  { email: 'admin@company.com', password: 'admin123', name: 'Admin User', role: 'IT Admin' },
-  { email: 'it@company.com', password: 'it123', name: 'IT Staff', role: 'IT Admin' },
-  { email: 'tech@company.com', password: 'tech123', name: 'Tech Support', role: 'IT Admin' },
-];
 
 const SESSION_KEY = 'asset-manager-session';
 const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
 
 interface Session {
+  access_token: string;
+  token_type: string;
   user: User;
   loginTime: number;
   lastActivity: number;
 }
 
 export class AuthService {
-  // Validate credentials (frontend demo only)
-  static login(email: string, password: string): { success: boolean; user?: User; error?: string } {
-    const user = DEMO_USERS.find(u => u.email === email && u.password === password);
-    
-    if (!user) {
-      return { success: false, error: 'Invalid email or password' };
+  // Login with backend API
+  static async login(email: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> {
+    try {
+      // Extract username from email (e.g., admin@company.com -> admin)
+      const username = email.split('@')[0];
+
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ detail: 'Login failed' }));
+        return { success: false, error: error.detail || 'Invalid email or password' };
+      }
+
+      const data = await response.json();
+
+      const session: Session = {
+        access_token: data.access_token,
+        token_type: data.token_type,
+        user: data.user,
+        loginTime: Date.now(),
+        lastActivity: Date.now(),
+      };
+
+      // Save session to localStorage
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+
+      return { success: true, user: data.user };
+    } catch (error) {
+      console.error('Login error:', error);
+      return { success: false, error: 'Network error. Please try again.' };
     }
+  }
 
-    const session: Session = {
-      user: { email: user.email, name: user.name, role: user.role },
-      loginTime: Date.now(),
-      lastActivity: Date.now(),
-    };
-
-    // Save session to localStorage
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-    
-    return { success: true, user: session.user };
+  // Get auth token for API calls
+  static getToken(): string | null {
+    const session = this.getSession();
+    return session?.access_token || null;
   }
 
   // Logout user

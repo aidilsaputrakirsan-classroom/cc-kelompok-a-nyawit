@@ -82,5 +82,5 @@ function generateMockAssets(count: number): Asset[] {
   return assets;
 }
 
-export const mockAssets = generateMockAssets(100);
+export const mockAssets = generateMockAssets(0);
 

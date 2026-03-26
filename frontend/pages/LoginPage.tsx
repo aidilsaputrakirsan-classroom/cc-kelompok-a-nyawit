@@ -22,17 +22,19 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     setError('');
     setIsLoading(true);
 
-    // Simulate async login (would be an API call in production)
-    setTimeout(() => {
-      const result = AuthService.login(email, password);
+    try {
+      const result = await AuthService.login(email, password);
       
       if (result.success) {
         onLogin?.();
       } else {
         setError(result.error || 'Login failed');
       }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
       setIsLoading(false);
-    }, 500);
+    }
   };
 
   return (

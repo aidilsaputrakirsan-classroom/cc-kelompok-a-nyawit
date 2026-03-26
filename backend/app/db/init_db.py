@@ -51,7 +51,7 @@ def seed_admin_user(db: Session) -> None:
     
     admin_user = User(
         username="admin",
-        email="admin@itasset.local",
+        email="admin@company.com",
         full_name="System Administrator",
         hashed_password=get_password_hash("admin123"),
         role=UserRole.ADMIN,
@@ -59,6 +59,32 @@ def seed_admin_user(db: Session) -> None:
     )
     
     db.add(admin_user)
+    
+    # Add IT user
+    it_user = User(
+        username="it",
+        email="it@company.com",
+        full_name="IT Staff",
+        hashed_password=get_password_hash("it123"),
+        role=UserRole.USER,
+        is_active=True,
+    )
+    db.add(it_user)
+    
+    # Add Tech user
+    tech_user = User(
+        username="tech",
+        email="tech@company.com",
+        full_name="Tech Support",
+        hashed_password=get_password_hash("tech123"),
+        role=UserRole.USER,
+        is_active=True,
+    )
+    db.add(tech_user)
+    
     db.commit()
-    logger.info("Created default admin user: admin / admin123")
-    logger.info("IMPORTANT: Please change the default password after first login!")
+    logger.info("Created default users:")
+    logger.info("  - admin / admin123")
+    logger.info("  - it / it123")
+    logger.info("  - tech / tech123")
+    logger.info("IMPORTANT: Please change the default passwords after first login!")

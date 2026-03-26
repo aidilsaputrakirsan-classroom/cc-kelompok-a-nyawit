@@ -5,6 +5,7 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
+    "ignoreDeprecations": "6.0",
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -24,8 +25,11 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+
+    /* Types */
+    "types": ["vite/client", "node"]
   },
-  "include": ["src", "app", "components", "pages", "lib", "hooks", "data"],
+  "include": ["src", "app", "components", "pages", "lib", "hooks"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
