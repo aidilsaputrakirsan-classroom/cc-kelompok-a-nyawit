@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import type { Asset } from '@/data/mockAssets';
-import { Package, MapPin, User, Calendar, DollarSign, Activity, Tag } from 'lucide-react';
+import { Package, MapPin, User, Calendar, Activity, Tag } from 'lucide-react';
 
 interface AssetDetailDialogProps {
   open: boolean;
@@ -135,15 +135,7 @@ export function AssetDetailDialog({ open, onOpenChange, asset }: AssetDetailDial
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <DollarSign className="h-5 w-5 mt-0.5" style={{ color: '#6B7280' }} />
-                  <div>
-                    <p className="text-sm font-medium" style={{ color: '#6B7280' }}>Value</p>
-                    <p className="text-base font-semibold" style={{ color: '#111827' }}>
-                      ${asset.value.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
+
 
                 <div className="flex items-start gap-3">
                   <Calendar className="h-5 w-5 mt-0.5" style={{ color: '#6B7280' }} />

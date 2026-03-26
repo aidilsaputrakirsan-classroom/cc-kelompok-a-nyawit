@@ -1,5 +1,5 @@
 export type AssetStatus = 'In Use' | 'Available' | 'Under Maintenance' | 'Retired';
-export type AssetCategory = 'Hardware' | 'Software' | 'Peripherals';
+export type AssetCategory = 'Hardware' | 'Peripherals';
 
 export type AssetCondition = 'Excellent' | 'Good' | 'Fair' | 'Poor';
 
@@ -14,12 +14,10 @@ export interface Asset {
   purchaseDate: string;
   lastUpdate: string;
   condition: AssetCondition;
-  value: number;
 }
 
 const assetTypes = {
   Hardware: ['Laptop', 'Desktop', 'Server', 'Tablet', 'Smartphone'],
-  Software: ['Software License', 'OS License', 'Cloud Subscription', 'Antivirus License', 'Design Suite'],
   Peripherals: ['Monitor', 'Keyboard', 'Mouse', 'Printer', 'Webcam', 'Headset', 'Docking Station']
 };
 
@@ -45,7 +43,7 @@ function getRandomDate(start: Date, end: Date): string {
 
 function generateMockAssets(count: number): Asset[] {
   const assets: Asset[] = [];
-  const categories: AssetCategory[] = ['Hardware', 'Software', 'Peripherals'];
+  const categories: AssetCategory[] = ['Hardware', 'Peripherals'];
   
   for (let i = 1; i <= count; i++) {
     const category = categories[Math.floor(Math.random() * categories.length)];
@@ -62,7 +60,6 @@ function generateMockAssets(count: number): Asset[] {
     const purchaseDate = getRandomDate(new Date(2020, 0, 1), new Date(2024, 11, 31));
     const lastUpdate = getRandomDate(new Date(2024, 0, 1), new Date(2025, 9, 9));
     const condition = conditions[Math.floor(Math.random() * conditions.length)];
-    const value = Math.floor(Math.random() * 5000) + 500;
 
     assets.push({
       id: generateAssetId(category, i),
@@ -74,8 +71,7 @@ function generateMockAssets(count: number): Asset[] {
       assignedTo,
       purchaseDate,
       lastUpdate,
-      condition,
-      value
+      condition
     });
   }
   

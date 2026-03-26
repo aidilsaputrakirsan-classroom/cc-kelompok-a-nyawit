@@ -13,13 +13,12 @@ interface AssetDialogProps {
   onSave: (asset: Asset) => void;
 }
 
-const locations = ['New York Office', 'San Francisco Office', 'London Office', 'Remote', 'Warehouse', 'Chicago Office'];
-const statuses: AssetStatus[] = ['In Use', 'Available', 'Under Maintenance', 'Retired'];
+const locations = ['Rak A', 'Rak B', 'Rak C', 'Rak D', 'Rak E', 'Rak F', 'Lantai', 'Lemari kaca'];
+const statuses: AssetStatus[] = ['In Use', 'Available','Retired'];
 const conditions: AssetCondition[] = ['Excellent', 'Good', 'Fair', 'Poor'];
-const categories: AssetCategory[] = ['Hardware', 'Software', 'Peripherals'];
+const categories: AssetCategory[] = ['Hardware', 'Peripherals'];
 const assetTypes: Record<AssetCategory, string[]> = {
   Hardware: ['Laptop', 'Desktop', 'Server', 'Tablet', 'Smartphone'],
-  Software: ['Software License', 'OS License', 'Cloud Subscription', 'Antivirus License', 'Design Suite'],
   Peripherals: ['Monitor', 'Keyboard', 'Mouse', 'Printer', 'Webcam', 'Headset', 'Docking Station']
 };
 
@@ -32,7 +31,6 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
     status: 'Available',
     assignedTo: 'Unassigned',
     condition: 'Good',
-    value: 1000,
     purchaseDate: new Date().toISOString().split('T')[0],
     lastUpdate: new Date().toISOString().split('T')[0]
   });
@@ -49,7 +47,6 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
         status: 'Available',
         assignedTo: 'Unassigned',
         condition: 'Good',
-        value: 1000,
         purchaseDate: new Date().toISOString().split('T')[0],
         lastUpdate: new Date().toISOString().split('T')[0]
       });
@@ -68,8 +65,7 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
       assignedTo: formData.assignedTo!,
       purchaseDate: formData.purchaseDate!,
       lastUpdate: new Date().toISOString().split('T')[0],
-      condition: formData.condition!,
-      value: formData.value!
+      condition: formData.condition!
     };
     onSave(assetData);
     onOpenChange(false);
@@ -188,16 +184,7 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="value">Value ($)</Label>
-              <Input
-                id="value"
-                type="number"
-                value={formData.value}
-                onChange={(e) => setFormData({ ...formData, value: Number(e.target.value) })}
-                required
-              />
-            </div>
+
 
             <div className="space-y-2">
               <Label htmlFor="purchaseDate">Purchase Date</Label>

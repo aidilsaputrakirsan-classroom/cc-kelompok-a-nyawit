@@ -26,7 +26,6 @@ export function DashboardPage() {
     const counts: Record<string, number> = {
       'All': allAssets.length,
       'Hardware': 0,
-      'Software': 0,
       'Peripherals': 0
     };
     

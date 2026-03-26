@@ -258,9 +258,9 @@ function PrintReportTab() {
     if (previewData.length === 0) return;
 
     if (format === 'csv') {
-      const headers = ['ID', 'Nama', 'Jenis', 'Kategori', 'Lokasi', 'Status', 'Kondisi', 'Ditugaskan Ke', 'Tanggal Beli', 'Nilai'];
+      const headers = ['ID', 'Nama', 'Jenis', 'Kategori', 'Lokasi', 'Status', 'Kondisi', 'Ditugaskan Ke', 'Tanggal Beli'];
       const rows = previewData.map(a =>
-        [a.id, a.name, a.type, a.category, a.location, a.status, a.condition, a.assignedTo, a.purchaseDate, a.value].join(',')
+        [a.id, a.name, a.type, a.category, a.location, a.status, a.condition, a.assignedTo, a.purchaseDate].join(',')
       );
       const csvContent = [headers.join(','), ...rows].join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -373,7 +373,6 @@ function PrintReportTab() {
                         <TableHead>Lokasi</TableHead>
                         <TableHead>Ditugaskan</TableHead>
                         <TableHead>Tgl. Beli</TableHead>
-                        <TableHead>Nilai</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -393,7 +392,6 @@ function PrintReportTab() {
                           <TableCell className="text-sm">{asset.location}</TableCell>
                           <TableCell className="text-sm">{asset.assignedTo}</TableCell>
                           <TableCell className="text-sm">{asset.purchaseDate}</TableCell>
-                          <TableCell className="text-sm">${asset.value.toLocaleString()}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

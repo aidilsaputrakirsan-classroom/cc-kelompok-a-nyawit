@@ -1,5 +1,5 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Package, CheckCircle, Wrench } from 'lucide-react';
+import { Package, CheckCircle, Archive } from 'lucide-react';
 import type { Asset } from '@/data/mockAssets';
 
 interface MetricCardsProps {
@@ -9,7 +9,7 @@ interface MetricCardsProps {
 export function MetricCards({ assets }: MetricCardsProps) {
   const totalAssets = assets.length;
   const assetsInUse = assets.filter(asset => asset.status === 'In Use').length;
-  const assetsUnderMaintenance = assets.filter(asset => asset.status === 'Under Maintenance').length;
+  const assetsRetired = assets.filter(asset => asset.status === 'Retired').length;
 
   const metrics = [
     {
@@ -27,11 +27,11 @@ export function MetricCards({ assets }: MetricCardsProps) {
       bgColor: '#ECFDF5'
     },
     {
-      title: 'Under Maintenance',
-      value: assetsUnderMaintenance,
-      icon: Wrench,
-      color: '#F59E0B',
-      bgColor: '#FEF3C7'
+      title: 'Retired',
+      value: assetsRetired,
+      icon: Archive,
+      color: '#6B7280',
+      bgColor: '#F3F4F6'
     }
   ];
 

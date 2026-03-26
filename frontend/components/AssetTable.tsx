@@ -15,7 +15,7 @@ interface AssetTableProps {
   onEditAsset?: (updatedAssets: Asset[]) => void;
 }
 
-type SortField = 'id' | 'name' | 'type' | 'location' | 'status' | 'assignedTo' | 'condition' | 'value' | 'lastUpdate';
+type SortField = 'id' | 'name' | 'type' | 'location' | 'status' | 'assignedTo' | 'condition' | 'lastUpdate';
 type SortDirection = 'asc' | 'desc';
 
 const STATUS_STYLES: Record<AssetStatus, { bg: string; text: string }> = {
@@ -275,15 +275,7 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
                         Condition <SortIcon field="condition" />
                       </button>
                     </TableHead>
-                    <TableHead className="w-[100px]">
-                      <button
-                        type="button"
-                        onClick={() => handleSort('value')}
-                        className="flex items-center gap-1 font-medium hover:text-foreground whitespace-nowrap"
-                      >
-                        Value <SortIcon field="value" />
-                      </button>
-                    </TableHead>
+
                     <TableHead className="w-[120px]">
                       <button
                         type="button"
@@ -299,7 +291,7 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
                 <TableBody>
                   {paginatedAssets.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                         No assets found matching your criteria
                       </TableCell>
                     </TableRow>
@@ -431,20 +423,7 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
                               </span>
                             )}
                           </TableCell>
-                          <TableCell>
-                            {isEditing ? (
-                              <Input
-                                type="number"
-                                value={rowData.value}
-                                onChange={(e) => setEditFormData({ ...rowData, value: Number(e.target.value) })}
-                                className="h-8"
-                              />
-                            ) : (
-                              <span className="text-sm whitespace-nowrap">
-                                ${asset.value.toLocaleString()}
-                              </span>
-                            )}
-                          </TableCell>
+
                           <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                             {new Date(asset.lastUpdate).toLocaleDateString()}
                           </TableCell>

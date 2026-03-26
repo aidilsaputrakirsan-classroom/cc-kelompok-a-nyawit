@@ -1,4 +1,4 @@
-import { Package, Laptop, FileCode, Cable } from 'lucide-react';
+import { Package, Laptop, Cable } from 'lucide-react';
 import type { AssetCategory } from '@/data/mockAssets';
 
 interface CategoryTabsProps {
@@ -10,7 +10,6 @@ interface CategoryTabsProps {
 const categories = [
   { id: 'All', label: 'All Assets', icon: Package },
   { id: 'Hardware', label: 'Hardware', icon: Laptop },
-  { id: 'Software', label: 'Software', icon: FileCode },
   { id: 'Peripherals', label: 'Peripherals', icon: Cable }
 ];
 

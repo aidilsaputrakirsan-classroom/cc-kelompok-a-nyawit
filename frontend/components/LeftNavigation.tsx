@@ -1,6 +1,6 @@
-import { LayoutDashboard, ClipboardList, MapPin, Tag, Users } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, MapPin, Tag, Users, ArrowLeftRight } from 'lucide-react';
 
-export type PageType = 'inventory' | 'asset-management' | 'location-management' | 'condition-management' | 'user-management';
+export type PageType = 'inventory' | 'asset-management' | 'location-management' | 'condition-management' | 'user-management' | 'transaksi';
 
 interface LeftNavigationProps {
   currentPage: PageType;
@@ -10,6 +10,7 @@ interface LeftNavigationProps {
 const navItems = [
   { id: 'inventory', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'asset-management', label: 'Manajemen Aset', icon: ClipboardList },
+  { id: 'transaksi', label: 'Transaksi', icon: ArrowLeftRight },
   { id: 'location-management', label: 'Manajemen Lokasi', icon: MapPin },
   { id: 'condition-management', label: 'Manajemen Kondisi', icon: Tag },
   { id: 'user-management', label: 'Manajemen Pengguna', icon: Users },
