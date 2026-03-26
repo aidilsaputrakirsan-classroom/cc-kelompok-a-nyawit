@@ -26,11 +26,11 @@ def seed_categories(db: Session) -> None:
 
     logger.info("Seeding default categories...")
     
+    # Categories that match the frontend expectations
     categories = [
-        Category(name="Network Devices", description="Router, Switch, Access Point, Firewall"),
-        Category(name="Server Infrastructure", description="Physical Servers, Storage Arrays, UPS"),
-        Category(name="Endpoint", description="Laptop, Macbook, Monitor, Peripherals"),
-        Category(name="Cabling & Accessories", description="Fiber Optic, UTP Cables, Transceivers"),
+        Category(name="Hardware", description="Laptops, Desktops, Servers, Tablets, Smartphones"),
+        Category(name="Software", description="Software Licenses, OS Licenses, Cloud Subscriptions, Antivirus"),
+        Category(name="Peripherals", description="Monitors, Keyboards, Mice, Printers, Webcams, Headsets"),
     ]
     
     for category in categories:

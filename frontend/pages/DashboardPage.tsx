@@ -1,49 +1,65 @@
 import { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { mockAssets } from '@/data/mockAssets';
 import { MetricCards } from '@/components/MetricCards';
 import { StatusPieChart } from '@/components/StatusPieChart';
 import { TypeBarChart } from '@/components/TypeBarChart';
 import { AssetTable } from '@/components/AssetTable';
 import { CategoryTabs } from '@/components/CategoryTabs';
 import { Toaster } from '@/components/ui/toaster';
-
-import type { AssetCategory, Asset } from '@/data/mockAssets';
+import { useAssets } from '@/hooks/useAssets';
+import type { Asset, AssetCategory } from '@/data/mockAssets';
 
 export function DashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<AssetCategory | 'All'>('All');
-  const [allAssets, setAllAssets] = useState<Asset[]>(mockAssets);
+  const { assets, loading, error, refetch } = useAssets();
 
   const filteredAssets = useMemo(() => {
     if (selectedCategory === 'All') {
-      return allAssets;
+      return assets;
     }
-    return allAssets.filter(asset => asset.category === selectedCategory);
-  }, [selectedCategory, allAssets]);
+    return assets.filter((asset: Asset) => asset.category === selectedCategory);
+  }, [selectedCategory, assets]);
 
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {
-      'All': allAssets.length,
+      'All': assets.length,
       'Hardware': 0,
       'Software': 0,
       'Peripherals': 0
     };
     
-    allAssets.forEach(asset => {
+    assets.forEach((asset: Asset) => {
       counts[asset.category]++;
     });
     
     return counts;
-  }, [allAssets]);
+  }, [assets]);
 
-  const handleAddAsset = (newAsset: Asset) => {
-    setAllAssets([newAsset, ...allAssets]);
+  const handleAddAsset = () => {
+    // Refresh the assets list after adding
+    refetch();
   };
 
-  const handleEditAsset = (updatedAssets: Asset[]) => {
-    setAllAssets(updatedAssets);
+  const handleEditAsset = () => {
+    // Refresh the assets list after editing
+    refetch();
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-gray-600">Loading assets...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-red-600">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <>
