@@ -125,6 +125,13 @@ Memantau siklus hidup aset secara *real-time*:
 ### 5. Log Peminjaman & Riwayat
 Mencatat riwayat penggunaan aset, terutama untuk perangkat *endpoint* (laptop), sehingga administrator tahu siapa yang menggunakan barang tersebut dan sejak kapan.
 
+### 6. Sistem Autentikasi JWT (Baru!)
+Sistem dilengkapi dengan autentikasi berbasis token JWT untuk keamanan:
+- **Role-based Access Control (RBAC):** Tiga level pengguna - Admin, Manager, dan User
+- **Token-based Authentication:** Login dengan JWT token yang aman
+- **Protected Endpoints:** Semua endpoint API dilindungi dengan autentikasi
+- **Default Admin:** Pengguna pertama yang mendaftar otomatis menjadi admin
+
 ## Target Pengguna
 - **IT Infrastructure Engineer/Sysadmin:** Untuk memantau perangkat jaringan dan server.
 - **IT Support/Procurement:** Untuk manajemen stok laptop dan aset kantor.
@@ -133,33 +140,80 @@ Mencatat riwayat penggunaan aset, terutama untuk perangkat *endpoint* (laptop), 
 ---
 *Proyek ini merupakan bagian dari tugas Cloud Computing Kelompok A Nyawit.*
 
-## Backend API (FastAPI + PostgreSQL)
+## Backend API (FastAPI + PostgreSQL + JWT Auth)
 
 Struktur backend tersedia di folder `backend/` dengan stack:
 - `FastAPI` untuk REST API
 - `SQLAlchemy` untuk ORM
 - `PostgreSQL` sebagai database utama
+- `JWT` untuk autentikasi
+- `Passlib` untuk hashing password
 
 ### Fitur Backend yang Disediakan
-- CRUD kategori aset (`/api/v1/categories`)
-- CRUD aset IT (`/api/v1/assets`)
-- Log peminjaman dan pengembalian aset (`/api/v1/borrow-logs`)
-- Health check (`/api/v1/health`)
+- **Autentikasi:**
+  - Register user (`/api/v1/auth/register`)
+  - Login dengan JWT (`/api/v1/auth/login`)
+  - Get current user (`/api/v1/auth/me`)
+- **Manajemen User (Admin only):**
+  - CRUD users (`/api/v1/users`)
+  - Role management (admin, manager, user)
+- **Kategori:** CRUD kategori aset (`/api/v1/categories`)
+- **Aset:** CRUD aset IT (`/api/v1/assets`)
+- **Log Peminjaman:** Log peminjaman dan pengembalian aset (`/api/v1/borrow-logs`)
+- **Health Check:** (`/api/v1/health`)
+
+### Role & Permissions
+
+| Endpoint | Admin | Manager | User |
+|----------|-------|---------|------|
+| GET /categories | ✅ | ✅ | ✅ |
+| POST /categories | ✅ | ✅ | ❌ |
+| PUT/DELETE /categories | ✅ | ✅ | ❌ |
+| GET /assets | ✅ | ✅ | ✅ |
+| POST/PUT/DELETE /assets | ✅ | ✅ | ❌ |
+| GET /borrow-logs | ✅ | ✅ | ✅ |
+| POST /borrow-logs | ✅ | ✅ | ❌ |
+| GET /users | ✅ | ✅ | ❌ |
+| POST/PUT/DELETE /users | ✅ | ❌ | ❌ |
 
 ### Struktur Folder
 ```text
 backend/
   app/
     api/
+      deps.py          # Authentication dependencies
+      router.py        # Main API router
+      routes/
+        auth.py        # Authentication endpoints
+        users.py       # User management
+        assets.py      # Asset CRUD
+        categories.py  # Category CRUD
+        borrow_logs.py # Borrow log CRUD
+        health.py      # Health check
     core/
+      config.py        # App configuration
+      security.py      # JWT & password hashing
     db/
+      database.py      # Database connection
+      init_db.py       # Database initialization
     models/
+      asset.py         # Asset model
+      base.py          # SQLAlchemy base
+      borrow_log.py    # Borrow log model
+      category.py      # Category model
+      user.py          # User model
     schemas/
-    main.py
+      asset.py         # Asset schemas
+      borrow_log.py    # Borrow log schemas
+      category.py      # Category schemas
+      user.py          # User schemas
+    main.py            # FastAPI app entry point
   database/
-    schema.sql
+    schema.sql         # Database schema
   tests/
-    test_health.py
+    test_health.py     # Health check tests
+    test_auth.py       # Auth tests
+    test_users.py      # User management tests
   requirements.txt
   .env.example
   Dockerfile
@@ -175,24 +229,24 @@ cd backend
 docker compose up -d --build
 ```
 
-1. Cek service berjalan:
+2. Cek service berjalan:
 
 ```bat
 docker compose ps
 ```
 
-1. Buka URL service:
+3. Buka URL service:
 
 - API: `http://127.0.0.1:8000`
 - Swagger: `http://127.0.0.1:8000/docs`
 - DB GUI (pgAdmin): `http://127.0.0.1:5050`
 
-1. Login pgAdmin:
+4. Login pgAdmin:
 
 - Email: `admin@local.dev`
 - Password: `admin123`
 
-1. Tambah server PostgreSQL di pgAdmin dengan parameter:
+5. Tambah server PostgreSQL di pgAdmin dengan parameter:
 
 - Name: `it-asset-db`
 - Host: `postgres`
@@ -201,7 +255,15 @@ docker compose ps
 - Password: `postgres`
 - Database: `it_asset_db`
 
-1. Stop semua container:
+6. Default Admin User:
+
+Setelah container berjalan, sistem otomatis membuat admin user:
+- Username: `admin`
+- Password: `admin123`
+
+**IMPORTANT:** Ganti password default setelah login pertama!
+
+7. Stop semua container:
 
 ```bat
 docker compose down
@@ -213,7 +275,51 @@ Jika ingin sekaligus hapus volume data:
 docker compose down -v
 ```
 
-### Setup Menjalankan Backend
+### API Authentication Flow
+
+1. **Register First User (becomes Admin):**
+```bash
+curl -X POST "http://localhost:8000/api/v1/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "email": "admin@company.com",
+    "password": "admin123",
+    "full_name": "System Administrator"
+  }'
+```
+
+2. **Login:**
+```bash
+curl -X POST "http://localhost:8000/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "admin",
+    "password": "admin123"
+  }'
+```
+
+Response:
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer",
+  "user": {
+    "id": 1,
+    "username": "admin",
+    "email": "admin@company.com",
+    "role": "admin"
+  }
+}
+```
+
+3. **Use Token in Requests:**
+```bash
+curl -X GET "http://localhost:8000/api/v1/assets" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+### Setup Menjalankan Backend (Tanpa Docker)
 
 1. Buat virtual environment lalu install dependency:
 
@@ -224,31 +330,33 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-1. Siapkan database PostgreSQL:
+2. Siapkan database PostgreSQL:
 
 - Buat database bernama `it_asset_db`
-- Jalankan file SQL:
+- Copy `.env.example` ke `.env` dan sesuaikan konfigurasi
 
-```bash
-psql -U postgres -d it_asset_db -f database/schema.sql
-```
-
-Atau jalankan PostgreSQL via Docker:
-
-```bash
-docker compose up -d
-psql -h localhost -U postgres -d it_asset_db -f database/schema.sql
-```
-
-1. Buat file `.env` dari `.env.example`, lalu sesuaikan `DATABASE_URL` jika perlu.
-
-1. Jalankan API:
+3. Jalankan API:
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-1. Dokumentasi API:
+4. Dokumentasi API:
 
 - Swagger UI: `http://127.0.0.1:8000/docs`
 - ReDoc: `http://127.0.0.1:8000/redoc`
+
+### Environment Variables
+
+Buat file `.env` di folder `backend/`:
+
+```env
+APP_NAME=IT Asset Management API
+APP_ENV=development
+DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/it_asset_db
+SECRET_KEY=your-super-secret-key-change-in-production
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
+
+**Note:** Untuk production, pastikan untuk mengubah `SECRET_KEY` dengan nilai yang aman dan random!

@@ -1,0 +1,18 @@
+[project]
+name = "it-asset-management-backend"
+version = "0.1.0"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "sqlalchemy",
+    "psycopg[binary]",
+    "pydantic-settings",
+    "python-dotenv",
+    "passlib[bcrypt]",
+    "python-jose[cryptography]",
+    "pyjwt",
+    "python-multipart",
+]
+
+[tool.setuptools]
+packages = ["app"]
