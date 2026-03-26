@@ -6,7 +6,7 @@ import { LeftNavigation, PageType } from '@/components/LeftNavigation';
 import { MobileNavigation } from '@/components/MobileNavigation';
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
 import { GlobalSearch } from '@/components/GlobalSearch';
-import { InventoryPage } from '@/pages/DashboardPage';
+import { DashboardPage } from '@/pages/DashboardPage';
 import { AssetManagementPage } from '@/pages/AssetManagementPage';
 import { LocationManagementPage } from '@/pages/LocationManagementPage';
 import { ConditionManagementPage } from '@/pages/ConditionManagementPage';
@@ -34,7 +34,7 @@ function App() {
   const renderPage = () => {
     switch (currentPage) {
       case 'inventory':
-        return <InventoryPage />;
+        return <DashboardPage />;
       case 'asset-management':
         return <AssetManagementPage />;
       case 'location-management':
@@ -44,7 +44,7 @@ function App() {
       case 'user-management':
         return <UserManagementPage />;
       default:
-        return <InventoryPage />;
+        return <DashboardPage />;
     }
   };
 

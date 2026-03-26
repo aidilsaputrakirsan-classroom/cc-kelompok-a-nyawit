@@ -11,7 +11,7 @@ import { Toaster } from '@/components/ui/toaster';
 
 import type { AssetCategory, Asset } from '@/data/mockAssets';
 
-export function InventoryPage() {
+export function DashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<AssetCategory | 'All'>('All');
   const [allAssets, setAllAssets] = useState<Asset[]>(mockAssets);
 
