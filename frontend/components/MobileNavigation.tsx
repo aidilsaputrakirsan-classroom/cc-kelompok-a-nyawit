@@ -1,4 +1,4 @@
-import { Menu, LayoutDashboard, ClipboardList, MapPin, Tag, Users } from 'lucide-react';
+import { Menu, LayoutDashboard, ClipboardList, MapPin, Tag, Users, ArrowLeftRight, FlaskConical } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,8 @@ interface MobileNavigationProps {
 const navItems = [
   { id: 'inventory', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'asset-management', label: 'Manajemen Aset', icon: ClipboardList },
+  { id: 'consumables', label: 'Barang Habis Pakai', icon: FlaskConical },
+  { id: 'transaksi', label: 'Transaksi', icon: ArrowLeftRight },
   { id: 'location-management', label: 'Manajemen Lokasi', icon: MapPin },
   { id: 'condition-management', label: 'Manajemen Kondisi', icon: Tag },
   { id: 'user-management', label: 'Manajemen Pengguna', icon: Users },

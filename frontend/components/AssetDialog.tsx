@@ -17,13 +17,16 @@ const locations = ['Rak A', 'Rak B', 'Rak C', 'Rak D', 'Rak E', 'Rak F', 'Lantai
 const statuses: AssetStatus[] = ['In Use', 'Available','Retired'];
 const conditions: AssetCondition[] = ['Excellent', 'Good', 'Fair', 'Poor'];
 const categories: AssetCategory[] = ['Hardware', 'Peripherals'];
-const assetTypes: Record<AssetCategory, string[]> = {
+const assetTypes: Record<'Hardware' | 'Peripherals', string[]> = {
   Hardware: ['Laptop', 'Desktop', 'Server', 'Tablet', 'Smartphone'],
   Peripherals: ['Monitor', 'Keyboard', 'Mouse', 'Printer', 'Webcam', 'Headset', 'Docking Station']
 };
 
-export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogProps) {
-  const [formData, setFormData] = useState<Partial<Asset>>({
+const createDefaultFormData = (): Partial<Asset> => {
+  const timestamp = Date.now().toString();
+  const suffix = timestamp.slice(-5);
+  const yearSegment = new Date().getFullYear();
+  return {
     name: '',
     type: '',
     category: 'Hardware',
@@ -31,25 +34,23 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
     status: 'Available',
     assignedTo: 'Unassigned',
     condition: 'Good',
+    quantity: 1,
     purchaseDate: new Date().toISOString().split('T')[0],
-    lastUpdate: new Date().toISOString().split('T')[0]
-  });
+    lastUpdate: new Date().toISOString().split('T')[0],
+    serialNumber: `SN-AUTO-${suffix}`,
+    productNumber: `PN-AUTO-${suffix}`,
+    modelNumber: `MD-${yearSegment}-${suffix}`,
+  };
+};
+
+export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogProps) {
+  const [formData, setFormData] = useState<Partial<Asset>>(createDefaultFormData());
 
   useEffect(() => {
     if (asset) {
       setFormData(asset);
     } else {
-      setFormData({
-        name: '',
-        type: '',
-        category: 'Hardware',
-        location: locations[0],
-        status: 'Available',
-        assignedTo: 'Unassigned',
-        condition: 'Good',
-        purchaseDate: new Date().toISOString().split('T')[0],
-        lastUpdate: new Date().toISOString().split('T')[0]
-      });
+      setFormData(createDefaultFormData());
     }
   }, [asset, open]);
 
@@ -63,9 +64,13 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
       location: formData.location!,
       status: formData.status!,
       assignedTo: formData.assignedTo!,
+      serialNumber: formData.serialNumber || `SN-AUTO-${Date.now().toString().slice(-5)}`,
+      productNumber: formData.productNumber || `PN-AUTO-${Date.now().toString().slice(-5)}`,
+      modelNumber: formData.modelNumber || `MD-${new Date().getFullYear()}-${Date.now().toString().slice(-3)}`,
       purchaseDate: formData.purchaseDate!,
       lastUpdate: new Date().toISOString().split('T')[0],
-      condition: formData.condition!
+      condition: formData.condition!,
+      quantity: formData.quantity ?? 1,
     };
     onSave(assetData);
     onOpenChange(false);
@@ -85,6 +90,16 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="serialNumber">Serial Number</Label>
+              <Input
+                id="serialNumber"
+                value={formData.serialNumber}
+                onChange={(e) => setFormData({ ...formData, serialNumber: e.target.value })}
                 required
               />
             </div>
@@ -116,11 +131,21 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {assetTypes[formData.category || 'Hardware'].map((type) => (
+                  {(assetTypes[formData.category as 'Hardware' | 'Peripherals'] ?? assetTypes['Hardware']).map((type: string) => (
                     <SelectItem key={type} value={type}>{type}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="productNumber">Product Number</Label>
+              <Input
+                id="productNumber"
+                value={formData.productNumber}
+                onChange={(e) => setFormData({ ...formData, productNumber: e.target.value })}
+                required
+              />
             </div>
 
             <div className="space-y-2">
@@ -138,6 +163,16 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="modelNumber">Model Number</Label>
+              <Input
+                id="modelNumber"
+                value={formData.modelNumber}
+                onChange={(e) => setFormData({ ...formData, modelNumber: e.target.value })}
+                required
+              />
             </div>
 
             <div className="space-y-2">

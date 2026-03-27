@@ -12,6 +12,7 @@ import { LocationManagementPage } from '@/pages/LocationManagementPage';
 import { ConditionManagementPage } from '@/pages/ConditionManagementPage';
 import { UserManagementPage } from '@/pages/UserManagementPage';
 import { TransaksiPage } from '@/pages/TransaksiPage';
+import { ConsumablesPage } from '@/pages/ConsumablesPage';
 import { LayoutDashboard } from 'lucide-react';
 import { AuthService } from '@/lib/auth';
 
@@ -46,6 +47,9 @@ function App() {
         return <UserManagementPage />;
       case 'transaksi':
         return <TransaksiPage />;
+      case 'consumables':
+        return <ConsumablesPage />;
+
       default:
         return <DashboardPage />;
     }

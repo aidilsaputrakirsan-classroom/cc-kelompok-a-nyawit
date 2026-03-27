@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Search, ChevronUp, ChevronDown, Plus, Pencil, Check, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Search, ChevronUp, ChevronDown, Plus, Minus, Pencil, Check, X } from 'lucide-react';
 import { AssetDialog } from '@/components/AssetDialog';
 import { useToast } from '@/hooks/use-toast';
 import type { Asset, AssetStatus, AssetCondition } from '@/data/mockAssets';
@@ -15,7 +18,7 @@ interface AssetTableProps {
   onEditAsset?: (updatedAssets: Asset[]) => void;
 }
 
-type SortField = 'id' | 'name' | 'type' | 'location' | 'status' | 'assignedTo' | 'condition' | 'lastUpdate';
+type SortField = 'id' | 'name' | 'type' | 'serialNumber' | 'productNumber' | 'modelNumber' | 'location' | 'status' | 'assignedTo' | 'condition' | 'lastUpdate';
 type SortDirection = 'asc' | 'desc';
 
 const STATUS_STYLES: Record<AssetStatus, { bg: string; text: string }> = {
@@ -50,6 +53,13 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Asset | null>(null);
+  // Adjust dialog state
+  const [adjustOpen, setAdjustOpen] = useState(false);
+  const [adjustMode, setAdjustMode] = useState<'tambah' | 'kurang'>('tambah');
+  const [adjustTarget, setAdjustTarget] = useState<Asset | null>(null);
+  const [adjustQty, setAdjustQty] = useState('1');
+  const [adjustPic, setAdjustPic] = useState('');
+  const [adjustNotes, setAdjustNotes] = useState('');
   const { toast } = useToast();
 
   const currentAssets = onAssetsChange ? assets : localAssets;
@@ -57,9 +67,11 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
   const availableLocations = Array.from(new Set(currentAssets.map(a => a.location))).sort();
 
   const filteredAssets = currentAssets.filter(asset => {
-    const matchesSearch = 
-      asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      asset.id.toLowerCase().includes(searchQuery.toLowerCase());
+    const normalizedQuery = searchQuery.toLowerCase();
+    const matchesSearch =
+      normalizedQuery.length === 0 ||
+      [asset.name, asset.id, asset.serialNumber, asset.productNumber, asset.modelNumber]
+        .some(value => value.toLowerCase().includes(normalizedQuery));
     const matchesStatus = statusFilter === 'all' || asset.status === statusFilter;
     const matchesLocation = locationFilter === 'all' || asset.location === locationFilter;
     
@@ -143,6 +155,34 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
     setEditFormData(null);
   };
 
+  const openAdjust = (mode: 'tambah' | 'kurang', asset: Asset) => {
+    setAdjustMode(mode);
+    setAdjustTarget(asset);
+    setAdjustQty('1');
+    setAdjustPic('');
+    setAdjustNotes('');
+    setAdjustOpen(true);
+  };
+
+  const handleAdjustSave = () => {
+    if (!adjustTarget || !adjustPic.trim()) return;
+    const qty = parseInt(adjustQty) || 0;
+    if (qty <= 0) return;
+    const today = new Date().toISOString().split('T')[0];
+    const updated = currentAssets.map(a => {
+      if (a.id !== adjustTarget.id) return a;
+      const next = adjustMode === 'tambah' ? a.quantity + qty : Math.max(0, a.quantity - qty);
+      return { ...a, quantity: next, lastUpdate: today };
+    });
+    if (onEditAsset) onEditAsset(updated);
+    else setLocalAssets(updated);
+    toast({
+      title: `Qty ${adjustMode === 'tambah' ? 'ditambahkan' : 'dikurangi'}`,
+      description: `${adjustTarget.name}: qty ${adjustMode === 'tambah' ? '+' : '−'}${qty}`,
+    });
+    setAdjustOpen(false);
+  };
+
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return null;
     return sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
@@ -166,7 +206,7 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 pointer-events-none" style={{ color: '#6B7280' }} />
                 <Input
-                  placeholder="Search by name or ID"
+                  placeholder="Search by name, ID, or serial"
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
@@ -209,7 +249,7 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
 
             <div className="border rounded-md overflow-hidden relative -mx-3 md:mx-0">
               <div className="overflow-x-auto">
-              <Table className="min-w-[800px]">
+              <Table className="min-w-[1100px]">
                 <TableHeader className="sticky top-0 bg-white z-10">
                   <TableRow>
                     <TableHead className="w-[100px]">
@@ -237,6 +277,33 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
                         className="flex items-center gap-1 font-medium hover:text-foreground whitespace-nowrap"
                       >
                         Type <SortIcon field="type" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[150px]">
+                      <button
+                        type="button"
+                        onClick={() => handleSort('serialNumber')}
+                        className="flex items-center gap-1 font-medium hover:text-foreground whitespace-nowrap"
+                      >
+                        Serial Number <SortIcon field="serialNumber" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[150px]">
+                      <button
+                        type="button"
+                        onClick={() => handleSort('productNumber')}
+                        className="flex items-center gap-1 font-medium hover:text-foreground whitespace-nowrap"
+                      >
+                        Product Number <SortIcon field="productNumber" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[150px]">
+                      <button
+                        type="button"
+                        onClick={() => handleSort('modelNumber')}
+                        className="flex items-center gap-1 font-medium hover:text-foreground whitespace-nowrap"
+                      >
+                        Model Number <SortIcon field="modelNumber" />
                       </button>
                     </TableHead>
                     <TableHead className="w-[150px]">
@@ -285,13 +352,14 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
                         Last Update <SortIcon field="lastUpdate" />
                       </button>
                     </TableHead>
-                    <TableHead className="w-[60px] sticky right-0 bg-white" style={{ boxShadow: '-2px 0 4px rgba(0, 0, 0, 0.05)' }}></TableHead>
+                    <TableHead className="w-[80px] text-center">Qty</TableHead>
+                    <TableHead className="w-[70px] sticky right-0 bg-white" style={{ boxShadow: '-2px 0 4px rgba(0, 0, 0, 0.05)' }}></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedAssets.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={13} className="text-center text-muted-foreground py-8">
                         No assets found matching your criteria
                       </TableCell>
                     </TableRow>
@@ -333,6 +401,41 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
                               </Select>
                             ) : (
                               <span className="whitespace-nowrap">{asset.type}</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {isEditing ? (
+                              <Input
+                                value={rowData.serialNumber}
+                                onChange={(e) => setEditFormData({ ...rowData, serialNumber: e.target.value })}
+                                className="h-8 font-mono"
+                              />
+                            ) : (
+                              <span className="font-mono text-sm whitespace-nowrap">{asset.serialNumber}</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {isEditing ? (
+                              <Input
+                                value={rowData.productNumber}
+                                onChange={(e) => setEditFormData({ ...rowData, productNumber: e.target.value })}
+                                className="h-8 font-mono"
+                              />
+                            ) : (
+                              <span className="font-mono text-sm whitespace-nowrap">{asset.productNumber}</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {isEditing ? (
+                              <Input
+                                value={rowData.modelNumber}
+                                onChange={(e) => setEditFormData({ ...rowData, modelNumber: e.target.value })}
+                                className="h-8"
+                              />
+                            ) : (
+                              <div className="truncate max-w-[150px]" title={asset.modelNumber}>
+                                {asset.modelNumber}
+                              </div>
                             )}
                           </TableCell>
                           <TableCell>
@@ -427,38 +530,36 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
                           <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                             {new Date(asset.lastUpdate).toLocaleDateString()}
                           </TableCell>
+                          <TableCell className="text-center">
+                            <span className="font-semibold text-sm" style={{ color: '#111827' }}>{asset.quantity}</span>
+                          </TableCell>
                           <TableCell className="sticky right-0 bg-white" style={{ boxShadow: '-2px 0 4px rgba(0, 0, 0, 0.05)' }}>
                             {isEditing ? (
                               <div className="flex gap-1">
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={handleSaveRow}
-                                  className="h-8 w-8 p-0"
-                                >
+                                <Button type="button" size="sm" variant="ghost" onClick={handleSaveRow} className="h-8 w-8 p-0">
                                   <Check className="h-4 w-4" style={{ color: '#10B981' }} />
                                 </Button>
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={handleCancelEdit}
-                                  className="h-8 w-8 p-0"
-                                >
+                                <Button type="button" size="sm" variant="ghost" onClick={handleCancelEdit} className="h-8 w-8 p-0">
                                   <X className="h-4 w-4" style={{ color: '#EF4444' }} />
                                 </Button>
                               </div>
                             ) : (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleEditRow(asset)}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Pencil className="h-4 w-4" style={{ color: '#6B7280' }} />
-                              </Button>
+                              <div className="flex gap-1 items-center">
+                                <button type="button" title="Tambah qty" onClick={() => openAdjust('tambah', asset)}
+                                  className="flex items-center justify-center h-7 w-7 rounded border transition-all hover:opacity-80"
+                                  style={{ borderColor: '#10B981', backgroundColor: '#ECFDF5', color: '#10B981' }}>
+                                  <Plus className="h-3.5 w-3.5" />
+                                </button>
+                                <button type="button" title="Kurangi qty" onClick={() => openAdjust('kurang', asset)}
+                                  disabled={asset.quantity === 0}
+                                  className="flex items-center justify-center h-7 w-7 rounded border transition-all hover:opacity-80 disabled:opacity-40"
+                                  style={{ borderColor: '#EF4444', backgroundColor: '#FEE2E2', color: '#EF4444' }}>
+                                  <Minus className="h-3.5 w-3.5" />
+                                </button>
+                                <Button type="button" size="sm" variant="ghost" onClick={() => handleEditRow(asset)} className="h-7 w-7 p-0">
+                                  <Pencil className="h-3.5 w-3.5" style={{ color: '#6B7280' }} />
+                                </Button>
+                              </div>
                             )}
                           </TableCell>
                         </TableRow>
@@ -522,12 +623,46 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
         </CardContent>
       </Card>
 
-      <AssetDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        asset={selectedAsset}
-        onSave={handleSaveAsset}
-      />
+      <AssetDialog open={dialogOpen} onOpenChange={setDialogOpen} asset={selectedAsset} onSave={handleSaveAsset} />
+
+      {/* Adjust Qty Dialog */}
+      <Dialog open={adjustOpen} onOpenChange={setAdjustOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle style={{ color: adjustMode === 'tambah' ? '#10B981' : '#EF4444' }}>
+              {adjustMode === 'tambah' ? 'Tambah Qty (+)' : 'Kurangi Qty (−)'} — {adjustTarget?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-1.5">
+              <Label>Jumlah <span style={{ color: '#EF4444' }}>*</span></Label>
+              <Input type="number" min={1} value={adjustQty} onChange={e => setAdjustQty(e.target.value)} />
+              {adjustMode === 'kurang' && adjustTarget && (
+                <p className="text-xs" style={{ color: '#6B7280' }}>Stok saat ini: {adjustTarget.quantity}</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label>PIC <span style={{ color: '#EF4444' }}>*</span></Label>
+              <Input placeholder="Nama lengkap..." value={adjustPic} onChange={e => setAdjustPic(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Catatan (opsional)</Label>
+              <Textarea placeholder="Alasan adjust..." value={adjustNotes}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setAdjustNotes(e.target.value)} rows={2} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAdjustOpen(false)}>Batal</Button>
+            <Button
+              onClick={handleAdjustSave}
+              disabled={!adjustPic.trim() || parseInt(adjustQty) <= 0}
+              style={{ backgroundColor: adjustMode === 'tambah' ? '#10B981' : '#EF4444', color: '#FFFFFF' }}
+            >
+              {adjustMode === 'tambah' ? 'Tambah' : 'Kurangi'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

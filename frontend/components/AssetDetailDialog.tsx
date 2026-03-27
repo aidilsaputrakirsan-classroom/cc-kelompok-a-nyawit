@@ -1,9 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import type { Asset } from '@/data/mockAssets';
-import { Package, MapPin, User, Calendar, Activity, Tag } from 'lucide-react';
+import { Package, MapPin, User, Calendar, Activity, Tag, Hash, Barcode, Cpu } from 'lucide-react';
 
 interface AssetDetailDialogProps {
   open: boolean;
@@ -89,6 +88,30 @@ export function AssetDetailDialog({ open, onOpenChange, asset }: AssetDetailDial
                   <div>
                     <p className="text-sm font-medium" style={{ color: '#6B7280' }}>Category</p>
                     <p className="text-base" style={{ color: '#111827' }}>{asset.category}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Hash className="h-5 w-5 mt-0.5" style={{ color: '#6B7280' }} />
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: '#6B7280' }}>Serial Number</p>
+                    <p className="text-base font-mono" style={{ color: '#111827' }}>{asset.serialNumber}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Barcode className="h-5 w-5 mt-0.5" style={{ color: '#6B7280' }} />
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: '#6B7280' }}>Product Number</p>
+                    <p className="text-base font-mono" style={{ color: '#111827' }}>{asset.productNumber}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Cpu className="h-5 w-5 mt-0.5" style={{ color: '#6B7280' }} />
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: '#6B7280' }}>Model Number</p>
+                    <p className="text-base" style={{ color: '#111827' }}>{asset.modelNumber}</p>
                   </div>
                 </div>
 
