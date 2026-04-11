@@ -1,103 +1,235 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Switch } from '@/components/ui/switch';
-import { Plus, Pencil, Trash2, Users, Search, ShieldCheck } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Pencil, Trash2, Users, Search, ShieldCheck, Package, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { API_BASE_URL } from '@/lib/api';
+
+interface Asset {
+  id: number;
+  asset_code: string;
+  name: string;
+  type: string;
+  location: string;
+  status: string;
+  created_at: string;
+}
 
 interface User {
   id: number;
-  name: string;
+  username: string;
   email: string;
-  role: 'admin' | 'manager' | 'user';
-  isActive: boolean;
-  createdAt: string;
+  full_name: string | null;
+  role: 'admin' | 'user';
+  is_active: boolean;
+  created_at: string;
+  asset_count?: number;
 }
 
-const initialUsers: User[] = [
-  { id: 1, name: 'Admin User', email: 'admin@company.com', role: 'admin', isActive: true, createdAt: '2024-01-01' },
-  { id: 2, name: 'IT Staff', email: 'it@company.com', role: 'manager', isActive: true, createdAt: '2024-02-15' },
-  { id: 3, name: 'Tech Support', email: 'tech@company.com', role: 'user', isActive: true, createdAt: '2024-03-10' },
-  { id: 4, name: 'John Smith', email: 'john.smith@company.com', role: 'user', isActive: false, createdAt: '2024-06-01' },
-];
+interface UserWithAssets extends User {
+  created_assets: Asset[];
+  asset_count: number;
+}
 
 const ROLE_LABELS: Record<string, { label: string; color: string; bg: string }> = {
   admin: { label: 'Admin', color: '#7C3AED', bg: '#EDE9FE' },
-  manager: { label: 'Manager', color: '#2563EB', bg: '#EFF6FF' },
-  user: { label: 'Pengguna', color: '#6B7280', bg: '#F3F4F6' },
+  user: { label: 'User', color: '#6B7280', bg: '#F3F4F6' },
 };
 
-type DialogMode = 'add' | 'edit' | null;
+const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
+  'In Use': { label: 'In Use', color: '#2563EB', bg: '#EFF6FF' },
+  'Available': { label: 'Available', color: '#10B981', bg: '#ECFDF5' },
+  'Under Maintenance': { label: 'Maintenance', color: '#F59E0B', bg: '#FEF3C7' },
+  'Retired': { label: 'Retired', color: '#EF4444', bg: '#FEE2E2' },
+};
+
+type DialogMode = 'add' | 'edit' | 'view' | null;
+
+// Helper to get auth token
+function getAuthToken(): string | null {
+  const session = localStorage.getItem('asset-manager-session');
+  if (!session) return null;
+  try {
+    const parsed = JSON.parse(session);
+    return parsed.access_token || null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchWithAuth(url: string, options: RequestInit = {}) {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...((options.headers as Record<string, string>) || {}),
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}${url}`, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    throw new Error(error.detail || `HTTP ${response.status}: ${response.statusText}`);
+  }
+
+  return response.json();
+}
 
 export function UserManagementPage() {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
   const [dialogMode, setDialogMode] = useState<DialogMode>(null);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState({ name: '', email: '', role: 'user' as User['role'], isActive: true });
+  const [userDetail, setUserDetail] = useState<UserWithAssets | null>(null);
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    full_name: '',
+    password: '',
+    is_active: true
+  });
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const { toast } = useToast();
 
+  // Fetch users on mount
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchWithAuth('/users');
+      setUsers(data);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Gagal memuat data pengguna',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserDetail = async (userId: number) => {
+    try {
+      const data = await fetchWithAuth(`/users/${userId}`);
+      setUserDetail(data);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Gagal memuat detail pengguna',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const filteredUsers = users.filter(u => {
     const matchSearch =
-      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchRole = roleFilter === 'all' || u.role === roleFilter;
-    return matchSearch && matchRole;
+      u.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (u.full_name && u.full_name.toLowerCase().includes(searchQuery.toLowerCase()));
+    return matchSearch;
   });
 
   const openAdd = () => {
-    setFormData({ name: '', email: '', role: 'user', isActive: true });
+    setFormData({ username: '', email: '', full_name: '', password: '', is_active: true });
     setDialogMode('add');
   };
 
   const openEdit = (user: User) => {
     setSelectedUser(user);
-    setFormData({ name: user.name, email: user.email, role: user.role, isActive: user.isActive });
+    setFormData({
+      username: user.username,
+      email: user.email,
+      full_name: user.full_name || '',
+      password: '',
+      is_active: user.is_active
+    });
     setDialogMode('edit');
   };
 
-  const handleSave = () => {
-    if (!formData.name.trim() || !formData.email.trim()) return;
+  const openView = async (user: User) => {
+    setSelectedUser(user);
+    setDialogMode('view');
+    await fetchUserDetail(user.id);
+  };
 
-    if (dialogMode === 'add') {
-      const newUser: User = {
-        id: Date.now(),
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        role: formData.role,
-        isActive: formData.isActive,
-        createdAt: new Date().toISOString().split('T')[0],
-      };
-      setUsers([...users, newUser]);
-      toast({ title: 'Pengguna ditambahkan', description: `${newUser.name} berhasil ditambahkan.` });
-    } else if (dialogMode === 'edit' && selectedUser) {
-      setUsers(users.map(u =>
-        u.id === selectedUser.id
-          ? { ...u, name: formData.name.trim(), email: formData.email.trim(), role: formData.role, isActive: formData.isActive }
-          : u
-      ));
-      toast({ title: 'Pengguna diperbarui', description: `${formData.name} berhasil diperbarui.` });
+  const handleSave = async () => {
+    if (!formData.username.trim() || !formData.email.trim()) return;
+
+    try {
+      if (dialogMode === 'add') {
+        if (!formData.password.trim()) {
+          toast({ title: 'Error', description: 'Password wajib diisi', variant: 'destructive' });
+          return;
+        }
+        await fetchWithAuth('/users', {
+          method: 'POST',
+          body: JSON.stringify({
+            username: formData.username.trim(),
+            email: formData.email.trim(),
+            full_name: formData.full_name.trim() || null,
+            password: formData.password,
+            role: 'admin',
+            is_active: formData.is_active
+          })
+        });
+        toast({ title: 'Pengguna ditambahkan', description: `${formData.username} berhasil ditambahkan.` });
+      } else if (dialogMode === 'edit' && selectedUser) {
+        const updateData: Record<string, unknown> = {
+          email: formData.email.trim(),
+          full_name: formData.full_name.trim() || null,
+          is_active: formData.is_active
+        };
+        if (formData.password.trim()) {
+          updateData.password = formData.password;
+        }
+        await fetchWithAuth(`/users/${selectedUser.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(updateData)
+        });
+        toast({ title: 'Pengguna diperbarui', description: `${formData.username} berhasil diperbarui.` });
+      }
+      setDialogMode(null);
+      fetchUsers();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Terjadi kesalahan',
+        variant: 'destructive'
+      });
     }
-    setDialogMode(null);
   };
 
-  const handleToggleActive = (id: number) => {
-    setUsers(users.map(u => u.id === id ? { ...u, isActive: !u.isActive } : u));
-  };
-
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     const user = users.find(u => u.id === id);
-    setUsers(users.filter(u => u.id !== id));
-    setDeleteConfirmId(null);
-    toast({ title: 'Pengguna dihapus', description: `${user?.name} berhasil dihapus.` });
+    try {
+      await fetchWithAuth(`/users/${id}`, { method: 'DELETE' });
+      setDeleteConfirmId(null);
+      toast({ title: 'Pengguna dihapus', description: `${user?.username} berhasil dihapus.` });
+      fetchUsers();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Gagal menghapus pengguna',
+        variant: 'destructive'
+      });
+    }
   };
 
   return (
@@ -106,7 +238,7 @@ export function UserManagementPage() {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold" style={{ color: '#111827' }}>Manajemen Pengguna</h1>
           <p className="text-xs md:text-sm mt-1" style={{ color: '#6B7280' }}>
-            Kelola akses pengguna yang dapat masuk ke sistem
+            Kelola pengguna admin dan lihat asset yang ditambahkan oleh masing-masing pengguna
           </p>
         </div>
 
@@ -114,8 +246,8 @@ export function UserManagementPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {[
             { label: 'Total Pengguna', value: users.length, color: '#2563EB', bg: '#EFF6FF' },
-            { label: 'Aktif', value: users.filter(u => u.isActive).length, color: '#10B981', bg: '#ECFDF5' },
-            { label: 'Tidak Aktif', value: users.filter(u => !u.isActive).length, color: '#EF4444', bg: '#FEE2E2' },
+            { label: 'Aktif', value: users.filter(u => u.is_active).length, color: '#10B981', bg: '#ECFDF5' },
+            { label: 'Tidak Aktif', value: users.filter(u => !u.is_active).length, color: '#EF4444', bg: '#FEE2E2' },
             { label: 'Admin', value: users.filter(u => u.role === 'admin').length, color: '#7C3AED', bg: '#EDE9FE' },
           ].map(stat => (
             <Card key={stat.label}>
@@ -136,7 +268,7 @@ export function UserManagementPage() {
               </div>
               <Button size="sm" onClick={openAdd} style={{ backgroundColor: '#2563EB', color: '#FFFFFF' }}>
                 <Plus className="h-4 w-4 mr-2" />
-                Tambah Pengguna
+                Tambah Admin
               </Button>
             </CardTitle>
           </CardHeader>
@@ -145,39 +277,34 @@ export function UserManagementPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none" style={{ color: '#6B7280' }} />
                 <Input
-                  placeholder="Cari nama atau email..."
+                  placeholder="Cari username, nama, atau email..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="pl-10"
                 />
               </div>
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <SelectValue placeholder="Semua Role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Role</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="user">Pengguna</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="border rounded-md overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nama</TableHead>
+                    <TableHead>Username</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Nama Lengkap</TableHead>
                     <TableHead>Role</TableHead>
                     <TableHead className="text-center">Status</TableHead>
-                    <TableHead>Dibuat</TableHead>
-                    <TableHead className="w-[80px]">Aksi</TableHead>
+                    <TableHead className="w-[120px]">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredUsers.length === 0 ? (
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8" style={{ color: '#6B7280' }}>
+                        Memuat data...
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredUsers.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-8" style={{ color: '#6B7280' }}>
                         Tidak ada pengguna yang ditemukan
@@ -193,12 +320,13 @@ export function UserManagementPage() {
                               className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
                               style={{ backgroundColor: '#EFF6FF', color: '#2563EB' }}
                             >
-                              {user.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()}
+                              {user.username.substring(0, 2).toUpperCase()}
                             </div>
-                            <span className="font-medium" style={{ color: '#111827' }}>{user.name}</span>
+                            <span className="font-medium" style={{ color: '#111827' }}>{user.username}</span>
                           </div>
                         </TableCell>
                         <TableCell style={{ color: '#6B7280' }}>{user.email}</TableCell>
+                        <TableCell style={{ color: '#6B7280' }}>{user.full_name || '-'}</TableCell>
                         <TableCell>
                           <span
                             className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium"
@@ -209,16 +337,15 @@ export function UserManagementPage() {
                           </span>
                         </TableCell>
                         <TableCell className="text-center">
-                          <Switch
-                            checked={user.isActive}
-                            onCheckedChange={() => handleToggleActive(user.id)}
-                          />
-                        </TableCell>
-                        <TableCell className="text-sm" style={{ color: '#6B7280' }}>
-                          {new Date(user.createdAt).toLocaleDateString('id-ID')}
+                          <Badge variant={user.is_active ? 'default' : 'secondary'}>
+                            {user.is_active ? 'Aktif' : 'Nonaktif'}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => openView(user)} title="Lihat Detail & Asset">
+                              <Eye className="h-4 w-4" style={{ color: '#2563EB' }} />
+                            </Button>
                             <Button size="sm" variant="ghost" className="h-8 w-8 p-0" onClick={() => openEdit(user)}>
                               <Pencil className="h-4 w-4" style={{ color: '#6B7280' }} />
                             </Button>
@@ -238,19 +365,20 @@ export function UserManagementPage() {
       </div>
 
       {/* Add/Edit Dialog */}
-      <Dialog open={dialogMode !== null} onOpenChange={() => setDialogMode(null)}>
+      <Dialog open={dialogMode === 'add' || dialogMode === 'edit'} onOpenChange={() => setDialogMode(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{dialogMode === 'add' ? 'Tambah Pengguna Baru' : 'Edit Pengguna'}</DialogTitle>
+            <DialogTitle>{dialogMode === 'add' ? 'Tambah Admin Baru' : 'Edit Pengguna'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="usr-name">Nama Lengkap <span style={{ color: '#EF4444' }}>*</span></Label>
+              <Label htmlFor="usr-username">Username <span style={{ color: '#EF4444' }}>*</span></Label>
               <Input
-                id="usr-name"
-                placeholder="Contoh: John Doe"
-                value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                id="usr-username"
+                placeholder="Contoh: johndoe"
+                value={formData.username}
+                onChange={e => setFormData({ ...formData, username: e.target.value })}
+                disabled={dialogMode === 'edit'}
               />
             </div>
             <div className="space-y-2">
@@ -264,23 +392,35 @@ export function UserManagementPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="usr-role">Role</Label>
-              <Select value={formData.role} onValueChange={(v) => setFormData({ ...formData, role: v as User['role'] })}>
-                <SelectTrigger id="usr-role">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="user">Pengguna</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="usr-fullname">Nama Lengkap</Label>
+              <Input
+                id="usr-fullname"
+                placeholder="Contoh: John Doe"
+                value={formData.full_name}
+                onChange={e => setFormData({ ...formData, full_name: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="usr-password">
+                Password {dialogMode === 'add' && <span style={{ color: '#EF4444' }}>*</span>}
+                {dialogMode === 'edit' && <span className="text-xs text-gray-500">(Kosongkan jika tidak ingin mengubah)</span>}
+              </Label>
+              <Input
+                id="usr-password"
+                type="password"
+                placeholder={dialogMode === 'add' ? 'Minimal 6 karakter' : '••••••••'}
+                value={formData.password}
+                onChange={e => setFormData({ ...formData, password: e.target.value })}
+              />
             </div>
             <div className="flex items-center gap-3">
-              <Switch
+              <input
+                type="checkbox"
                 id="usr-active"
-                checked={formData.isActive}
-                onCheckedChange={v => setFormData({ ...formData, isActive: v })}
+                checked={formData.is_active}
+                onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                aria-label="Pengguna Aktif"
               />
               <Label htmlFor="usr-active">Pengguna Aktif</Label>
             </div>
@@ -289,11 +429,121 @@ export function UserManagementPage() {
             <Button variant="outline" onClick={() => setDialogMode(null)}>Batal</Button>
             <Button
               onClick={handleSave}
-              disabled={!formData.name.trim() || !formData.email.trim()}
+              disabled={!formData.username.trim() || !formData.email.trim() || (dialogMode === 'add' && !formData.password.trim())}
               style={{ backgroundColor: '#2563EB', color: '#FFFFFF' }}
             >
               {dialogMode === 'add' ? 'Tambahkan' : 'Simpan'}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View User Detail Dialog */}
+      <Dialog open={dialogMode === 'view'} onOpenChange={() => setDialogMode(null)}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Detail Pengguna & Asset</DialogTitle>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="space-y-6">
+              {/* User Info */}
+              <div className="grid grid-cols-2 gap-4 p-4 rounded-lg" style={{ backgroundColor: '#F9FAFB' }}>
+                <div>
+                  <p className="text-xs text-gray-500">Username</p>
+                  <p className="font-medium">{selectedUser.username}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Email</p>
+                  <p className="font-medium">{selectedUser.email}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Nama Lengkap</p>
+                  <p className="font-medium">{selectedUser.full_name || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Role</p>
+                  <span
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium"
+                    style={{ backgroundColor: ROLE_LABELS[selectedUser.role].bg, color: ROLE_LABELS[selectedUser.role].color }}
+                  >
+                    <ShieldCheck className="h-3 w-3" />
+                    {ROLE_LABELS[selectedUser.role].label}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Status</p>
+                  <Badge variant={selectedUser.is_active ? 'default' : 'secondary'}>
+                    {selectedUser.is_active ? 'Aktif' : 'Nonaktif'}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Bergabung</p>
+                  <p className="font-medium">{new Date(selectedUser.created_at).toLocaleDateString('id-ID')}</p>
+                </div>
+              </div>
+
+              {/* Assets Created */}
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Package className="h-5 w-5" style={{ color: '#2563EB' }} />
+                  <h3 className="font-semibold">Asset yang Ditambahkan</h3>
+                  <Badge variant="secondary">
+                    {userDetail?.asset_count || 0} Asset
+                  </Badge>
+                </div>
+
+                {userDetail?.created_assets && userDetail.created_assets.length > 0 ? (
+                  <div className="border rounded-md overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Kode Asset</TableHead>
+                          <TableHead>Nama</TableHead>
+                          <TableHead>Tipe</TableHead>
+                          <TableHead>Lokasi</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Tanggal</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {userDetail.created_assets.map(asset => {
+                          const statusInfo = STATUS_LABELS[asset.status] || { label: asset.status, color: '#6B7280', bg: '#F3F4F6' };
+                          return (
+                            <TableRow key={asset.id}>
+                              <TableCell className="font-medium">{asset.asset_code}</TableCell>
+                              <TableCell>{asset.name}</TableCell>
+                              <TableCell>{asset.type}</TableCell>
+                              <TableCell>{asset.location}</TableCell>
+                              <TableCell>
+                                <span
+                                  className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                                  style={{ backgroundColor: statusInfo.bg, color: statusInfo.color }}
+                                >
+                                  {statusInfo.label}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-sm text-gray-500">
+                                {new Date(asset.created_at).toLocaleDateString('id-ID')}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 rounded-lg" style={{ backgroundColor: '#F9FAFB' }}>
+                    <Package className="h-12 w-12 mx-auto mb-2" style={{ color: '#D1D5DB' }} />
+                    <p className="text-sm" style={{ color: '#6B7280' }}>
+                      {userDetail === null ? 'Memuat data asset...' : 'Pengguna ini belum menambahkan asset'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setDialogMode(null)}>Tutup</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -305,7 +555,7 @@ export function UserManagementPage() {
             <DialogTitle style={{ color: '#EF4444' }}>Hapus Pengguna?</DialogTitle>
           </DialogHeader>
           <p className="text-sm" style={{ color: '#6B7280' }}>
-            Pengguna <strong style={{ color: '#111827' }}>{users.find(u => u.id === deleteConfirmId)?.name}</strong> akan dihapus secara permanen.
+            Pengguna <strong style={{ color: '#111827' }}>{users.find(u => u.id === deleteConfirmId)?.username}</strong> akan dihapus secara permanen.
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>Batal</Button>

@@ -447,8 +447,8 @@ export function AssetManagementPage() {
           <TabsContent value="data-aset" className="mt-4">
             <AssetTable
               assets={allAssets}
-              onAssetsChange={(asset) => setAllAssets([asset, ...allAssets])}
-              onEditAsset={(updated) => setAllAssets(updated)}
+              onAssetsChange={(asset, locationId) => setAllAssets([asset, ...allAssets])}
+              onEditAsset={(updated, locationId) => setAllAssets(updated)}
             />
           </TabsContent>
 

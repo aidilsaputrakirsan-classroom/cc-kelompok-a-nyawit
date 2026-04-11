@@ -14,7 +14,6 @@ export interface Asset {
   purchaseDate: string;
   lastUpdate: string;
   condition: AssetCondition;
-  value: number;
 }
 
 const assetTypes = {
@@ -62,7 +61,6 @@ function generateMockAssets(count: number): Asset[] {
     const purchaseDate = getRandomDate(new Date(2020, 0, 1), new Date(2024, 11, 31));
     const lastUpdate = getRandomDate(new Date(2024, 0, 1), new Date(2025, 9, 9));
     const condition = conditions[Math.floor(Math.random() * conditions.length)];
-    const value = Math.floor(Math.random() * 5000) + 500;
 
     assets.push({
       id: generateAssetId(category, i),
@@ -75,7 +73,6 @@ function generateMockAssets(count: number): Asset[] {
       purchaseDate,
       lastUpdate,
       condition,
-      value
     });
   }
   

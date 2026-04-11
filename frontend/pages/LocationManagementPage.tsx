@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,27 +8,58 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Plus, Pencil, Trash2, MapPin, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { API_BASE_URL } from '@/lib/api';
 
 interface Location {
   id: number;
   name: string;
-  address: string;
-  assetCount: number;
+  address: string | null;
+  asset_count: number;
+  created_at: string;
+  updated_at: string;
 }
-
-const initialLocations: Location[] = [
-  { id: 1, name: 'New York Office', address: '1 Wall Street, New York, NY 10005', assetCount: 42 },
-  { id: 2, name: 'San Francisco Office', address: '101 Market St, San Francisco, CA 94105', assetCount: 35 },
-  { id: 3, name: 'London Office', address: '1 Canada Square, London E14 5AB', assetCount: 28 },
-  { id: 4, name: 'Chicago Office', address: '233 S Wacker Dr, Chicago, IL 60606', assetCount: 19 },
-  { id: 5, name: 'Warehouse', address: '500 Industrial Blvd, Newark, NJ 07101', assetCount: 61 },
-  { id: 6, name: 'Remote', address: '-', assetCount: 14 },
-];
 
 type DialogMode = 'add' | 'edit' | null;
 
+// Helper to get auth token
+function getAuthToken(): string | null {
+  const session = localStorage.getItem('asset-manager-session');
+  if (!session) return null;
+  try {
+    const parsed = JSON.parse(session);
+    return parsed.access_token || null;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchWithAuth(url: string, options: RequestInit = {}) {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...((options.headers as Record<string, string>) || {}),
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}${url}`, {
+    ...options,
+    headers,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    throw new Error(error.detail || `HTTP ${response.status}: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
 export function LocationManagementPage() {
-  const [locations, setLocations] = useState<Location[]>(initialLocations);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogMode, setDialogMode] = useState<DialogMode>(null);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
@@ -36,9 +67,30 @@ export function LocationManagementPage() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const { toast } = useToast();
 
+  // Fetch locations on mount
+  useEffect(() => {
+    fetchLocations();
+  }, []);
+
+  const fetchLocations = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchWithAuth('/locations');
+      setLocations(data);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Gagal memuat data lokasi',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredLocations = locations.filter(loc =>
     loc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    loc.address.toLowerCase().includes(searchQuery.toLowerCase())
+    (loc.address && loc.address.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const openAdd = () => {
@@ -48,38 +100,58 @@ export function LocationManagementPage() {
 
   const openEdit = (loc: Location) => {
     setSelectedLocation(loc);
-    setFormData({ name: loc.name, address: loc.address });
+    setFormData({ name: loc.name, address: loc.address || '' });
     setDialogMode('edit');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name.trim()) return;
 
-    if (dialogMode === 'add') {
-      const newLoc: Location = {
-        id: Date.now(),
-        name: formData.name.trim(),
-        address: formData.address.trim() || '-',
-        assetCount: 0,
-      };
-      setLocations([...locations, newLoc]);
-      toast({ title: 'Lokasi ditambahkan', description: `${newLoc.name} berhasil ditambahkan.` });
-    } else if (dialogMode === 'edit' && selectedLocation) {
-      setLocations(locations.map(l =>
-        l.id === selectedLocation.id
-          ? { ...l, name: formData.name.trim(), address: formData.address.trim() || '-' }
-          : l
-      ));
-      toast({ title: 'Lokasi diperbarui', description: `${formData.name} berhasil diperbarui.` });
+    try {
+      if (dialogMode === 'add') {
+        await fetchWithAuth('/locations', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: formData.name.trim(),
+            address: formData.address.trim() || null
+          })
+        });
+        toast({ title: 'Lokasi ditambahkan', description: `${formData.name} berhasil ditambahkan.` });
+      } else if (dialogMode === 'edit' && selectedLocation) {
+        await fetchWithAuth(`/locations/${selectedLocation.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            name: formData.name.trim(),
+            address: formData.address.trim() || null
+          })
+        });
+        toast({ title: 'Lokasi diperbarui', description: `${formData.name} berhasil diperbarui.` });
+      }
+      setDialogMode(null);
+      fetchLocations();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Terjadi kesalahan',
+        variant: 'destructive'
+      });
     }
-    setDialogMode(null);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     const loc = locations.find(l => l.id === id);
-    setLocations(locations.filter(l => l.id !== id));
-    setDeleteConfirmId(null);
-    toast({ title: 'Lokasi dihapus', description: `${loc?.name} berhasil dihapus.` });
+    try {
+      await fetchWithAuth(`/locations/${id}`, { method: 'DELETE' });
+      setDeleteConfirmId(null);
+      toast({ title: 'Lokasi dihapus', description: `${loc?.name} berhasil dihapus.` });
+      fetchLocations();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Gagal menghapus lokasi',
+        variant: 'destructive'
+      });
+    }
   };
 
   return (
@@ -96,8 +168,8 @@ export function LocationManagementPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {[
             { label: 'Total Lokasi', value: locations.length, color: '#2563EB', bg: '#EFF6FF' },
-            { label: 'Total Aset', value: locations.reduce((s, l) => s + l.assetCount, 0), color: '#10B981', bg: '#ECFDF5' },
-            { label: 'Rata-rata Aset', value: Math.round(locations.reduce((s, l) => s + l.assetCount, 0) / locations.length), color: '#F59E0B', bg: '#FEF3C7' },
+            { label: 'Total Aset', value: locations.reduce((s, l) => s + l.asset_count, 0), color: '#10B981', bg: '#ECFDF5' },
+            { label: 'Rata-rata Aset', value: locations.length > 0 ? Math.round(locations.reduce((s, l) => s + l.asset_count, 0) / locations.length) : 0, color: '#F59E0B', bg: '#FEF3C7' },
           ].map(stat => (
             <Card key={stat.label}>
               <CardContent className="p-4">
@@ -143,7 +215,13 @@ export function LocationManagementPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredLocations.length === 0 ? (
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-8" style={{ color: '#6B7280' }}>
+                        Memuat data...
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredLocations.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={4} className="text-center py-8" style={{ color: '#6B7280' }}>
                         Tidak ada lokasi yang ditemukan
@@ -152,13 +230,13 @@ export function LocationManagementPage() {
                   ) : filteredLocations.map(loc => (
                     <TableRow key={loc.id}>
                       <TableCell className="font-medium" style={{ color: '#111827' }}>{loc.name}</TableCell>
-                      <TableCell style={{ color: '#6B7280' }}>{loc.address}</TableCell>
+                      <TableCell style={{ color: '#6B7280' }}>{loc.address || '-'}</TableCell>
                       <TableCell className="text-center">
                         <span
                           className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-semibold"
                           style={{ backgroundColor: '#EFF6FF', color: '#2563EB' }}
                         >
-                          {loc.assetCount}
+                          {loc.asset_count}
                         </span>
                       </TableCell>
                       <TableCell>
@@ -200,7 +278,7 @@ export function LocationManagementPage() {
               <Label htmlFor="loc-address">Alamat</Label>
               <Input
                 id="loc-address"
-                placeholder="Alamat lengkap (opsional)"
+                placeholder="Contoh: Jl. Sudirman No. 1, Jakarta"
                 value={formData.address}
                 onChange={e => setFormData({ ...formData, address: e.target.value })}
               />
@@ -226,8 +304,7 @@ export function LocationManagementPage() {
             <DialogTitle style={{ color: '#EF4444' }}>Hapus Lokasi?</DialogTitle>
           </DialogHeader>
           <p className="text-sm" style={{ color: '#6B7280' }}>
-            Lokasi <strong style={{ color: '#111827' }}>{locations.find(l => l.id === deleteConfirmId)?.name}</strong> akan dihapus secara permanen. 
-            Aset yang terkait tidak akan terhapus.
+            Lokasi <strong style={{ color: '#111827' }}>{locations.find(l => l.id === deleteConfirmId)?.name}</strong> akan dihapus secara permanen.
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>Batal</Button>

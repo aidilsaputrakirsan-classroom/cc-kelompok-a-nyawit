@@ -55,6 +55,17 @@ CREATE TABLE IF NOT EXISTS categories (
 );
 
 -- =========================
+-- LOCATIONS TABLE
+-- =========================
+CREATE TABLE IF NOT EXISTS locations (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    address TEXT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- =========================
 -- ASSETS TABLE
 -- =========================
 CREATE TABLE IF NOT EXISTS assets (
@@ -63,20 +74,28 @@ CREATE TABLE IF NOT EXISTS assets (
     serial_number VARCHAR(100) UNIQUE,
     brand VARCHAR(100) NOT NULL,
     model VARCHAR(100) NOT NULL,
-    specs TEXT,
     ip_address VARCHAR(64),
     mac_address VARCHAR(64),
     purchase_date DATE,
-    location VARCHAR(255),
+    location_id INTEGER,
     status asset_status NOT NULL DEFAULT 'available',
     category_id INTEGER NOT NULL,
+    created_by INTEGER,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_assets_category
         FOREIGN KEY (category_id)
         REFERENCES categories(id)
-        ON DELETE RESTRICT
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_assets_location
+        FOREIGN KEY (location_id)
+        REFERENCES locations(id)
+        ON DELETE SET NULL,
+    CONSTRAINT fk_assets_created_by
+        FOREIGN KEY (created_by)
+        REFERENCES users(id)
+        ON DELETE SET NULL
 );
 
 -- =========================

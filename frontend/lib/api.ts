@@ -1,6 +1,6 @@
 // API Service for connecting frontend to backend
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+export const API_BASE_URL = 'http://localhost:8000/api/v1';
 
 // Helper to get auth token from localStorage
 function getAuthToken(): string | null {
@@ -52,6 +52,14 @@ export interface Category {
     updated_at: string;
 }
 
+export interface Location {
+    id: number;
+    name: string;
+    address: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
 // Frontend Asset interface (matches mockAssets.ts)
 export interface Asset {
     id: string;  // asset_code from backend
@@ -74,7 +82,8 @@ export interface BackendAsset {
     name: string;
     type: string;
     category_id: number;
-    location: string;
+    location: string | null;
+    location_id: number | null;
     status: AssetStatus;
     assigned_to: string | null;
     purchase_date: string | null;
@@ -90,6 +99,7 @@ export interface BackendAsset {
     created_at: string;
     updated_at: string;
     category: Category | null;
+    location_ref: Location | null;
 }
 
 export interface AssetCreate {
@@ -97,7 +107,8 @@ export interface AssetCreate {
     name: string;
     type: string;
     category_id: number;
-    location: string;
+    location?: string;
+    location_id?: number;
     status?: AssetStatus;
     assigned_to?: string;
     purchase_date?: string;
@@ -118,6 +129,7 @@ export interface AssetUpdate {
     type?: string;
     category_id?: number;
     location?: string;
+    location_id?: number;
     status?: AssetStatus;
     assigned_to?: string;
     purchase_date?: string;
@@ -146,7 +158,7 @@ function mapBackendToFrontend(asset: BackendAsset): Asset {
         name: asset.name,
         type: asset.type,
         category: categoryMap[asset.category_id] || 'Hardware',
-        location: asset.location,
+        location: asset.location || asset.location_ref?.name || 'Unknown',
         status: asset.status,
         assignedTo: asset.assigned_to || 'Unassigned',
         purchaseDate: asset.purchase_date || asset.created_at.split('T')[0],
@@ -157,13 +169,14 @@ function mapBackendToFrontend(asset: BackendAsset): Asset {
 }
 
 // Map frontend asset to backend asset create
-function mapFrontendToCreate(asset: Omit<Asset, 'id'> & { asset_code: string }, categoryId: number): AssetCreate {
+function mapFrontendToCreate(asset: Omit<Asset, 'id'> & { asset_code: string }, categoryId: number, locationId?: number): AssetCreate {
     return {
         asset_code: asset.asset_code,
         name: asset.name,
         type: asset.type,
         category_id: categoryId,
         location: asset.location,
+        location_id: locationId,
         status: asset.status,
         assigned_to: asset.assignedTo === 'Unassigned' ? undefined : asset.assignedTo,
         purchase_date: asset.purchaseDate,
@@ -202,9 +215,9 @@ export const AssetAPI = {
     },
 
     // Create asset
-    create: async (asset: Omit<Asset, 'id'> & { asset_code: string }): Promise<Asset> => {
+    create: async (asset: Omit<Asset, 'id'> & { asset_code: string }, locationId?: number): Promise<Asset> => {
         const categoryId = getCategoryId(asset.category);
-        const data = mapFrontendToCreate(asset, categoryId);
+        const data = mapFrontendToCreate(asset, categoryId, locationId);
         const backendAsset: BackendAsset = await fetchWithAuth('/assets', {
             method: 'POST',
             body: JSON.stringify(data),
@@ -213,12 +226,13 @@ export const AssetAPI = {
     },
 
     // Update asset
-    update: async (id: number, asset: Partial<Asset>): Promise<Asset> => {
+    update: async (id: number, asset: Partial<Asset>, locationId?: number): Promise<Asset> => {
         const updateData: AssetUpdate = {};
         if (asset.name) updateData.name = asset.name;
         if (asset.type) updateData.type = asset.type;
         if (asset.category) updateData.category_id = getCategoryId(asset.category);
         if (asset.location) updateData.location = asset.location;
+        if (locationId !== undefined) updateData.location_id = locationId;
         if (asset.status) updateData.status = asset.status;
         if (asset.assignedTo !== undefined) updateData.assigned_to = asset.assignedTo === 'Unassigned' ? undefined : asset.assignedTo;
         if (asset.purchaseDate) updateData.purchase_date = asset.purchaseDate;
@@ -267,6 +281,37 @@ export const CategoryAPI = {
 
     delete: (id: number): Promise<void> => {
         return fetchWithAuth(`/categories/${id}`, {
+            method: 'DELETE',
+        });
+    },
+};
+
+// Location API
+export const LocationAPI = {
+    getAll: (): Promise<Location[]> => {
+        return fetchWithAuth('/locations');
+    },
+
+    getById: (id: number): Promise<Location> => {
+        return fetchWithAuth(`/locations/${id}`);
+    },
+
+    create: (data: { name: string; address?: string }): Promise<Location> => {
+        return fetchWithAuth('/locations', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+
+    update: (id: number, data: { name?: string; address?: string }): Promise<Location> => {
+        return fetchWithAuth(`/locations/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        });
+    },
+
+    delete: (id: number): Promise<void> => {
+        return fetchWithAuth(`/locations/${id}`, {
             method: 'DELETE',
         });
     },

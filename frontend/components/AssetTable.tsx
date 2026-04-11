@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Search, ChevronUp, ChevronDown, Plus, Pencil, Check, X } from 'lucide-react';
 import { AssetDialog } from '@/components/AssetDialog';
 import { useToast } from '@/hooks/use-toast';
+import { LocationAPI, Location } from '@/lib/api';
 import type { Asset, AssetStatus, AssetCondition } from '@/data/mockAssets';
 
 interface AssetTableProps {
   assets: Asset[];
-  onAssetsChange?: (asset: Asset) => void;
-  onEditAsset?: (updatedAssets: Asset[]) => void;
+  onAssetsChange?: (asset: Asset, locationId?: number) => void;
+  onEditAsset?: (updatedAssets: Asset[], locationId?: number) => void;
 }
 
 type SortField = 'id' | 'name' | 'type' | 'location' | 'status' | 'assignedTo' | 'condition' | 'value' | 'lastUpdate';
@@ -32,13 +33,13 @@ const CONDITION_STYLES: Record<AssetCondition, { bg: string; text: string }> = {
   'Poor': { bg: '#FEE2E2', text: '#EF4444' }
 };
 
-const locations = ['New York Office', 'San Francisco Office', 'London Office', 'Remote', 'Warehouse', 'Chicago Office'];
 const statuses: AssetStatus[] = ['In Use', 'Available', 'Under Maintenance', 'Retired'];
 const conditions: AssetCondition[] = ['Excellent', 'Good', 'Fair', 'Poor'];
 const assetTypes = ['Laptop', 'Desktop', 'Server', 'Tablet', 'Smartphone', 'Software License', 'OS License', 'Cloud Subscription', 'Antivirus License', 'Design Suite', 'Monitor', 'Keyboard', 'Mouse', 'Printer', 'Webcam', 'Headset', 'Docking Station'];
 
 export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTableProps) {
   const [localAssets, setLocalAssets] = useState(assets);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [locationFilter, setLocationFilter] = useState<string>('all');
@@ -51,6 +52,18 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Asset | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const data = await LocationAPI.getAll();
+        setLocations(data);
+      } catch (err) {
+        console.error('Failed to fetch locations:', err);
+      }
+    };
+    fetchLocations();
+  }, []);
 
   const currentAssets = onAssetsChange ? assets : localAssets;
 
@@ -95,9 +108,9 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
     }
   };
 
-  const handleSaveAsset = (asset: Asset) => {
+  const handleSaveAsset = (asset: Asset, locationId?: number) => {
     if (onAssetsChange) {
-      onAssetsChange(asset);
+      onAssetsChange(asset, locationId);
     } else {
       setLocalAssets([asset, ...localAssets]);
     }
@@ -124,12 +137,13 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
   const handleSaveRow = () => {
     if (!editFormData) return;
     
-    const updatedAssets = currentAssets.map((a) => 
+    const selectedLocation = locations.find(loc => loc.name === editFormData.location);
+    const updatedAssets = currentAssets.map((a) =>
       a.id === editFormData.id ? { ...editFormData, lastUpdate: new Date().toISOString().split('T')[0] } : a
     );
     
     if (onEditAsset) {
-      onEditAsset(updatedAssets);
+      onEditAsset(updatedAssets, selectedLocation?.id);
     } else {
       setLocalAssets(updatedAssets);
     }
@@ -274,16 +288,7 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
                       >
                         Condition <SortIcon field="condition" />
                       </button>
-                    </TableHead>
-                    <TableHead className="w-[100px]">
-                      <button
-                        type="button"
-                        onClick={() => handleSort('value')}
-                        className="flex items-center gap-1 font-medium hover:text-foreground whitespace-nowrap"
-                      >
-                        Value <SortIcon field="value" />
-                      </button>
-                    </TableHead>
+                      </TableHead>
                     <TableHead className="w-[120px]">
                       <button
                         type="button"
@@ -354,7 +359,7 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
                                 </SelectTrigger>
                                 <SelectContent>
                                   {locations.map((loc) => (
-                                    <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                                    <SelectItem key={loc.id} value={loc.name}>{loc.name}</SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
@@ -428,20 +433,6 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
                                 }}
                               >
                                 {asset.condition}
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {isEditing ? (
-                              <Input
-                                type="number"
-                                value={rowData.value}
-                                onChange={(e) => setEditFormData({ ...rowData, value: Number(e.target.value) })}
-                                className="h-8"
-                              />
-                            ) : (
-                              <span className="text-sm whitespace-nowrap">
-                                ${asset.value.toLocaleString()}
                               </span>
                             )}
                           </TableCell>

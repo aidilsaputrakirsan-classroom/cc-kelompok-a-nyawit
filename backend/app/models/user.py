@@ -1,10 +1,14 @@
 import enum
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, Enum, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
+
+if TYPE_CHECKING:
+    from app.models.asset import Asset
 
 
 class UserRole(str, enum.Enum):
@@ -31,6 +35,9 @@ class User(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
+
+    # Relationship to assets created by this user
+    created_assets: Mapped[list["Asset"]] = relationship("Asset", back_populates="creator")
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, username={self.username}, role={self.role})>"

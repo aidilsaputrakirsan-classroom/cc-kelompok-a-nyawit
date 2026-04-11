@@ -51,9 +51,9 @@ export function useAssets(options: UseAssetsOptions = {}) {
         fetchAssets();
     }, [fetchAssets]);
 
-    const createAsset = async (asset: Omit<Asset, 'id'> & { asset_code: string }): Promise<Asset | null> => {
+    const createAsset = async (asset: Omit<Asset, 'id'> & { asset_code: string }, locationId?: number): Promise<Asset | null> => {
         try {
-            const newAsset = await AssetAPI.create(asset);
+            const newAsset = await AssetAPI.create(asset, locationId);
             setAssets((prev) => [newAsset, ...prev]);
             toast({
                 title: 'Success',
@@ -71,7 +71,7 @@ export function useAssets(options: UseAssetsOptions = {}) {
         }
     };
 
-    const updateAsset = async (assetCode: string, data: Partial<Asset>): Promise<Asset | null> => {
+    const updateAsset = async (assetCode: string, data: Partial<Asset>, locationId?: number): Promise<Asset | null> => {
         try {
             // Find the backend ID from the asset code
             const backendAssets = await AssetAPI.getAll();

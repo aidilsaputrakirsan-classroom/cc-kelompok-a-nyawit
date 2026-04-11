@@ -4,16 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { LocationAPI, Location } from '@/lib/api';
 import type { Asset, AssetStatus, AssetCondition, AssetCategory } from '@/data/mockAssets';
 
 interface AssetDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   asset?: Asset | null;
-  onSave: (asset: Asset) => void;
+  onSave: (asset: Asset, locationId?: number) => void;
 }
 
-const locations = ['New York Office', 'San Francisco Office', 'London Office', 'Remote', 'Warehouse', 'Chicago Office'];
 const statuses: AssetStatus[] = ['In Use', 'Available', 'Under Maintenance', 'Retired'];
 const conditions: AssetCondition[] = ['Excellent', 'Good', 'Fair', 'Poor'];
 const categories: AssetCategory[] = ['Hardware', 'Software', 'Peripherals'];
@@ -24,40 +24,74 @@ const assetTypes: Record<AssetCategory, string[]> = {
 };
 
 export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogProps) {
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const [formData, setFormData] = useState<Partial<Asset>>({
     name: '',
     type: '',
     category: 'Hardware',
-    location: locations[0],
+    location: '',
     status: 'Available',
     assignedTo: 'Unassigned',
     condition: 'Good',
-    value: 1000,
     purchaseDate: new Date().toISOString().split('T')[0],
     lastUpdate: new Date().toISOString().split('T')[0]
   });
 
+  // Fetch locations from database when dialog opens
   useEffect(() => {
+    const fetchLocations = async () => {
+      if (!open) return;
+      setIsLoadingLocations(true);
+      try {
+        const data = await LocationAPI.getAll();
+        setLocations(data);
+      } catch (err) {
+        console.error('Failed to fetch locations:', err);
+      } finally {
+        setIsLoadingLocations(false);
+      }
+    };
+    fetchLocations();
+  }, [open]);
+
+  // Initialize form data when dialog opens or asset changes
+  useEffect(() => {
+    if (!open) return;
+
     if (asset) {
+      // Editing existing asset - use asset data
       setFormData(asset);
     } else {
+      // Adding new asset - reset form with empty/default values
       setFormData({
         name: '',
         type: '',
         category: 'Hardware',
-        location: locations[0],
+        location: '',
         status: 'Available',
         assignedTo: 'Unassigned',
         condition: 'Good',
-        value: 1000,
         purchaseDate: new Date().toISOString().split('T')[0],
         lastUpdate: new Date().toISOString().split('T')[0]
       });
     }
   }, [asset, open]);
 
+  // Set default location after locations are loaded (only for new assets)
+  useEffect(() => {
+    if (!open || asset) return; // Only for new assets
+    if (locations.length > 0 && !formData.location) {
+      setFormData(prev => ({
+        ...prev,
+        location: locations[0].name
+      }));
+    }
+  }, [locations, open, asset, formData.location]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const selectedLocation = locations.find(loc => loc.name === formData.location);
     const assetData: Asset = {
       id: asset?.id || `${formData.category?.substring(0, 3).toUpperCase()}-${Date.now()}`,
       name: formData.name!,
@@ -69,9 +103,8 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
       purchaseDate: formData.purchaseDate!,
       lastUpdate: new Date().toISOString().split('T')[0],
       condition: formData.condition!,
-      value: formData.value!
     };
-    onSave(assetData);
+    onSave(assetData, selectedLocation?.id);
     onOpenChange(false);
   };
 
@@ -132,13 +165,14 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
               <Select
                 value={formData.location}
                 onValueChange={(value) => setFormData({ ...formData, location: value })}
+                disabled={isLoadingLocations || locations.length === 0}
               >
                 <SelectTrigger id="location">
-                  <SelectValue />
+                  <SelectValue placeholder={isLoadingLocations ? "Loading locations..." : locations.length === 0 ? "No locations available" : "Select location"} />
                 </SelectTrigger>
                 <SelectContent>
                   {locations.map((loc) => (
-                    <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                    <SelectItem key={loc.id} value={loc.name}>{loc.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -186,17 +220,6 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="value">Value ($)</Label>
-              <Input
-                id="value"
-                type="number"
-                value={formData.value}
-                onChange={(e) => setFormData({ ...formData, value: Number(e.target.value) })}
-                required
-              />
             </div>
 
             <div className="space-y-2">

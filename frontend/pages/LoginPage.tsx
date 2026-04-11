@@ -153,24 +153,15 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                   </div>
                 </div>
 
-                <Button 
-                  type="submit" 
-                  className="w-full h-11 text-sm font-semibold" 
+                <Button
+                  type="submit"
+                  className="w-full h-11 text-sm font-semibold"
                   style={{ backgroundColor: '#2563EB' }}
                   disabled={isLoading}
                 >
                   {isLoading ? 'Signing in...' : 'Sign in'}
                 </Button>
               </form>
-              
-              <div className="mt-4 p-3 rounded-lg" style={{ backgroundColor: '#F3F4F6' }}>
-                <p className="text-xs font-medium mb-2" style={{ color: '#6B7280' }}>Demo Accounts:</p>
-                <div className="space-y-1">
-                  <p className="text-xs" style={{ color: '#6B7280' }}>• admin@company.com / admin123</p>
-                  <p className="text-xs" style={{ color: '#6B7280' }}>• it@company.com / it123</p>
-                  <p className="text-xs" style={{ color: '#6B7280' }}>• tech@company.com / tech123</p>
-                </div>
-              </div>
             </CardContent>
           </Card>
 

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.api.router import api_router
 from app.db.database import SessionLocal
-from app.db.init_db import init_db, seed_admin_user, seed_categories
+from app.db.init_db import init_db, seed_admin_user, seed_categories, seed_locations, seed_assets
 from app.models import Asset, BorrowLog, Category, User  # noqa: F401 - imported for SQLAlchemy registration
 
 logging.basicConfig(level=logging.INFO)
@@ -48,6 +48,8 @@ def on_startup() -> None:
         db: Session = SessionLocal()
         try:
             seed_categories(db)
+            seed_locations(db)
+            seed_assets(db)
             seed_admin_user(db)
         finally:
             db.close()
