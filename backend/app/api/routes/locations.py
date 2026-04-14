@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, require_admin
 from app.models.location import Location
+from app.models.asset import Asset
 from app.models.user import User
 from app.schemas.location import LocationCreate, LocationRead, LocationUpdate
 
@@ -13,19 +14,16 @@ router = APIRouter(prefix="/locations", tags=["Locations"])
 @router.get("", response_model=list[LocationRead])
 def list_locations(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin),
 ) -> list[dict]:
-    """List all locations with asset count (admin only)."""
+    """List all locations with asset count."""
     locations = db.scalars(select(Location).order_by(Location.name)).all()
     
     result = []
     for loc in locations:
-        # Count assets at this location
+        # Count assets at this location using direct query
         asset_count = db.scalar(
-            select(func.count())
-            .select_from(Location)
-            .join(Location.assets)
-            .where(Location.id == loc.id)
+            select(func.count(Asset.id))
+            .where(Asset.location_id == loc.id)
         ) or 0
         
         result.append({
@@ -44,9 +42,8 @@ def list_locations(
 def get_location(
     location_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin),
 ) -> dict:
-    """Get a specific location by ID with asset count (admin only)."""
+    """Get a specific location by ID with asset count."""
     location = db.get(Location, location_id)
     if not location:
         raise HTTPException(
@@ -54,12 +51,10 @@ def get_location(
             detail="Location not found",
         )
     
-    # Count assets at this location
+    # Count assets at this location using direct query
     asset_count = db.scalar(
-        select(func.count())
-        .select_from(Location)
-        .join(Location.assets)
-        .where(Location.id == location_id)
+        select(func.count(Asset.id))
+        .where(Asset.location_id == location_id)
     ) or 0
     
     return {
@@ -139,12 +134,10 @@ def update_location(
     db.commit()
     db.refresh(location)
     
-    # Count assets at this location
+    # Count assets at this location using direct query
     asset_count = db.scalar(
-        select(func.count())
-        .select_from(Location)
-        .join(Location.assets)
-        .where(Location.id == location_id)
+        select(func.count(Asset.id))
+        .where(Asset.location_id == location_id)
     ) or 0
     
     return {
@@ -171,12 +164,10 @@ def delete_location(
             detail="Location not found",
         )
     
-    # Check if location has assets
+    # Check if location has assets using direct query
     asset_count = db.scalar(
-        select(func.count())
-        .select_from(Location)
-        .join(Location.assets)
-        .where(Location.id == location_id)
+        select(func.count(Asset.id))
+        .where(Asset.location_id == location_id)
     ) or 0
     
     if asset_count > 0:

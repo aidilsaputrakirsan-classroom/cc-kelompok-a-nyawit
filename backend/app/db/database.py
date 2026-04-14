@@ -7,13 +7,15 @@ from app.core.config import get_settings
 
 settings = get_settings()
 
-# Engine creation with best practices for Docker/Production
+# Engine creation with SQLite configuration
+connect_args = {}
+if settings.database_url.startswith("sqlite"):
+    connect_args = {"check_same_thread": False}
+
 engine = create_engine(
     settings.database_url,
-    # pool_pre_ping=True checks the connection before every request
-    # Highly recommended for databases in Docker containers
+    connect_args=connect_args,
     pool_pre_ping=True,
-    # echo=False prevents excessive logging, set to True for debugging SQL queries
     echo=False,
 )
 

@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ClipboardList, Plus, Pencil, Trash2, Printer, Search, FileDown, Layers } from 'lucide-react';
 import { AssetTable } from '@/components/AssetTable';
-import { mockAssets } from '@/data/mockAssets';
+import { useAssets } from '@/hooks/useAssets';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import type { Asset } from '@/data/mockAssets';
@@ -234,6 +234,7 @@ function AssetTypesTab() {
 // ─── Print Report Tab ───────────────────────────────────────────────────────────
 
 function PrintReportTab() {
+  const { assets } = useAssets();
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -243,7 +244,7 @@ function PrintReportTab() {
   const { toast } = useToast();
 
   const handleGenerate = () => {
-    let results = [...mockAssets];
+    let results = [...assets];
 
     if (dateFrom) results = results.filter(a => a.purchaseDate >= dateFrom);
     if (dateTo) results = results.filter(a => a.purchaseDate <= dateTo);
@@ -258,9 +259,9 @@ function PrintReportTab() {
     if (previewData.length === 0) return;
 
     if (format === 'csv') {
-      const headers = ['ID', 'Nama', 'Jenis', 'Kategori', 'Lokasi', 'Status', 'Kondisi', 'Ditugaskan Ke', 'Tanggal Beli', 'Nilai'];
+      const headers = ['ID', 'Nama', 'Jenis', 'Kategori', 'Lokasi', 'Status', 'Kondisi', 'Ditugaskan Ke', 'Tanggal Beli'];
       const rows = previewData.map(a =>
-        [a.id, a.name, a.type, a.category, a.location, a.status, a.condition, a.assignedTo, a.purchaseDate, a.value].join(',')
+        [a.id, a.name, a.type, a.category, a.location, a.status, a.condition, a.assignedTo, a.purchaseDate].join(',')
       );
       const csvContent = [headers.join(','), ...rows].join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -393,7 +394,6 @@ function PrintReportTab() {
                           <TableCell className="text-sm">{asset.location}</TableCell>
                           <TableCell className="text-sm">{asset.assignedTo}</TableCell>
                           <TableCell className="text-sm">{asset.purchaseDate}</TableCell>
-                          <TableCell className="text-sm">${asset.value.toLocaleString()}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -416,7 +416,33 @@ function PrintReportTab() {
 // ─── Main Page ──────────────────────────────────────────────────────────────────
 
 export function AssetManagementPage() {
-  const [allAssets, setAllAssets] = useState<Asset[]>(mockAssets);
+  const { assets: allAssets, loading, error, refetch, updateAsset, createAsset } = useAssets();
+
+  const handleAddAsset = async (asset: Omit<Asset, 'id'> & { asset_code: string }, locationId?: number) => {
+    await createAsset(asset, locationId);
+    refetch();
+  };
+
+  const handleEditAsset = async (asset: Asset, locationId?: number) => {
+    await updateAsset(asset.id, asset, locationId);
+    refetch();
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-gray-600">Loading assets...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-red-600">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -447,8 +473,8 @@ export function AssetManagementPage() {
           <TabsContent value="data-aset" className="mt-4">
             <AssetTable
               assets={allAssets}
-              onAssetsChange={(asset, locationId) => setAllAssets([asset, ...allAssets])}
-              onEditAsset={(updated, locationId) => setAllAssets(updated)}
+              onAssetsChange={handleAddAsset}
+              onEditAsset={handleEditAsset}
             />
           </TabsContent>
 

@@ -1,6 +1,6 @@
 // API Service for connecting frontend to backend
-
-export const API_BASE_URL = 'http://localhost:8000/api/v1';
+// Use relative paths - Vite proxy handles CORS
+export const API_BASE_URL = '/api/v1';
 
 // Helper to get auth token from localStorage
 function getAuthToken(): string | null {
@@ -26,10 +26,14 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
+    console.log(`API Request: ${options.method || 'GET'} ${API_BASE_URL}${url}`);
+
     const response = await fetch(`${API_BASE_URL}${url}`, {
         ...options,
         headers,
     });
+
+    console.log(`API Response: ${response.status} ${response.statusText}`);
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
@@ -62,7 +66,8 @@ export interface Location {
 
 // Frontend Asset interface (matches mockAssets.ts)
 export interface Asset {
-    id: string;  // asset_code from backend
+    id: string;  // numeric ID for API calls
+    asset_code: string;  // display code
     name: string;
     type: string;
     category: AssetCategory;
@@ -72,7 +77,6 @@ export interface Asset {
     purchaseDate: string;
     lastUpdate: string;
     condition: AssetCondition;
-    value: number;
 }
 
 // Backend Asset interface
@@ -84,12 +88,11 @@ export interface BackendAsset {
     category_id: number;
     location: string | null;
     location_id: number | null;
-    status: AssetStatus;
+    status: string;
     assigned_to: string | null;
     purchase_date: string | null;
     last_update: string | null;
-    condition: AssetCondition;
-    value: number;
+    condition: string;
     serial_number: string | null;
     brand: string | null;
     model: string | null;
@@ -114,7 +117,6 @@ export interface AssetCreate {
     purchase_date?: string;
     last_update?: string;
     condition?: AssetCondition;
-    value?: number;
     serial_number?: string;
     brand?: string;
     model?: string;
@@ -135,7 +137,6 @@ export interface AssetUpdate {
     purchase_date?: string;
     last_update?: string;
     condition?: AssetCondition;
-    value?: number;
     serial_number?: string;
     brand?: string;
     model?: string;
@@ -153,18 +154,38 @@ function mapBackendToFrontend(asset: BackendAsset): Asset {
         3: 'Peripherals',
     };
 
+    // Helper to normalize status from database (e.g., 'AVAILABLE' -> 'Available')
+    const normalizeStatus = (status: string): AssetStatus => {
+        const s = status.toLowerCase();
+        if (s === 'available') return 'Available';
+        if (s === 'in use') return 'In Use';
+        if (s === 'under maintenance') return 'Under Maintenance';
+        if (s === 'retired') return 'Retired';
+        return 'Available' as AssetStatus;
+    };
+
+    // Helper to normalize condition (e.g., 'GOOD' -> 'Good')
+    const normalizeCondition = (cond: string): AssetCondition => {
+        const c = cond.toLowerCase();
+        if (c === 'excellent') return 'Excellent';
+        if (c === 'good') return 'Good';
+        if (c === 'fair') return 'Fair';
+        if (c === 'poor') return 'Poor';
+        return 'Good' as AssetCondition;
+    };
+
     return {
-        id: asset.asset_code,
+        id: asset.id.toString(),  // Use numeric ID for API calls
+        asset_code: asset.asset_code,  // Keep asset_code for display
         name: asset.name,
         type: asset.type,
         category: categoryMap[asset.category_id] || 'Hardware',
         location: asset.location || asset.location_ref?.name || 'Unknown',
-        status: asset.status,
+        status: normalizeStatus(asset.status),
         assignedTo: asset.assigned_to || 'Unassigned',
         purchaseDate: asset.purchase_date || asset.created_at.split('T')[0],
         lastUpdate: asset.last_update || asset.updated_at.split('T')[0],
-        condition: asset.condition,
-        value: asset.value,
+        condition: normalizeCondition(asset.condition),
     };
 }
 
@@ -182,7 +203,6 @@ function mapFrontendToCreate(asset: Omit<Asset, 'id'> & { asset_code: string }, 
         purchase_date: asset.purchaseDate,
         last_update: asset.lastUpdate,
         condition: asset.condition,
-        value: asset.value,
     };
 }
 
@@ -226,7 +246,8 @@ export const AssetAPI = {
     },
 
     // Update asset
-    update: async (id: number, asset: Partial<Asset>, locationId?: number): Promise<Asset> => {
+    update: async (asset: Partial<Asset> & { id: string }, locationId?: number): Promise<Asset> => {
+        const numericId = parseInt(asset.id, 10);
         const updateData: AssetUpdate = {};
         if (asset.name) updateData.name = asset.name;
         if (asset.type) updateData.type = asset.type;
@@ -238,9 +259,8 @@ export const AssetAPI = {
         if (asset.purchaseDate) updateData.purchase_date = asset.purchaseDate;
         if (asset.lastUpdate) updateData.last_update = asset.lastUpdate;
         if (asset.condition) updateData.condition = asset.condition;
-        if (asset.value !== undefined) updateData.value = asset.value;
 
-        const backendAsset: BackendAsset = await fetchWithAuth(`/assets/${id}`, {
+        const backendAsset: BackendAsset = await fetchWithAuth(`/assets/${numericId}`, {
             method: 'PUT',
             body: JSON.stringify(updateData),
         });
@@ -248,8 +268,9 @@ export const AssetAPI = {
     },
 
     // Delete asset
-    delete: async (id: number): Promise<void> => {
-        return fetchWithAuth(`/assets/${id}`, {
+    delete: async (id: string): Promise<void> => {
+        const numericId = parseInt(id, 10);
+        return fetchWithAuth(`/assets/${numericId}`, {
             method: 'DELETE',
         });
     },

@@ -92,17 +92,11 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const selectedLocation = locations.find(loc => loc.name === formData.location);
-    const assetData: Asset = {
-      id: asset?.id || `${formData.category?.substring(0, 3).toUpperCase()}-${Date.now()}`,
-      name: formData.name!,
-      type: formData.type!,
-      category: formData.category!,
-      location: formData.location!,
-      status: formData.status!,
-      assignedTo: formData.assignedTo!,
-      purchaseDate: formData.purchaseDate!,
+    const assetData: any = {
+      ...formData,
+      id: asset?.id || '',
+      asset_code: asset?.asset_code || `${formData.category?.substring(0, 3).toUpperCase()}-${Date.now()}`,
       lastUpdate: new Date().toISOString().split('T')[0],
-      condition: formData.condition!,
     };
     onSave(assetData, selectedLocation?.id);
     onOpenChange(false);

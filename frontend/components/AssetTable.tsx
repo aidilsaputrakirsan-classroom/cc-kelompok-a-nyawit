@@ -13,10 +13,10 @@ import type { Asset, AssetStatus, AssetCondition } from '@/data/mockAssets';
 interface AssetTableProps {
   assets: Asset[];
   onAssetsChange?: (asset: Asset, locationId?: number) => void;
-  onEditAsset?: (updatedAssets: Asset[], locationId?: number) => void;
+  onEditAsset?: (asset: Asset, locationId?: number) => void;
 }
 
-type SortField = 'id' | 'name' | 'type' | 'location' | 'status' | 'assignedTo' | 'condition' | 'value' | 'lastUpdate';
+type SortField = 'id' | 'name' | 'type' | 'location' | 'status' | 'assignedTo' | 'condition' | 'lastUpdate';
 type SortDirection = 'asc' | 'desc';
 
 const STATUS_STYLES: Record<AssetStatus, { bg: string; text: string }> = {
@@ -80,8 +80,8 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
   });
 
   const sortedAssets = [...filteredAssets].sort((a, b) => {
-    let aValue: string | number = a[sortField];
-    let bValue: string | number = b[sortField];
+    let aValue: string | number = a[sortField as keyof Asset] as string | number;
+    let bValue: string | number = b[sortField as keyof Asset] as string | number;
     
     if (sortField === 'lastUpdate') {
       aValue = new Date(a.lastUpdate).getTime();
@@ -138,14 +138,12 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
     if (!editFormData) return;
     
     const selectedLocation = locations.find(loc => loc.name === editFormData.location);
-    const updatedAssets = currentAssets.map((a) =>
-      a.id === editFormData.id ? { ...editFormData, lastUpdate: new Date().toISOString().split('T')[0] } : a
-    );
+    const updatedAsset = { ...editFormData, lastUpdate: new Date().toISOString().split('T')[0] };
     
     if (onEditAsset) {
-      onEditAsset(updatedAssets, selectedLocation?.id);
+      onEditAsset(updatedAsset, selectedLocation?.id);
     } else {
-      setLocalAssets(updatedAssets);
+      setLocalAssets(currentAssets.map((a) => a.id === updatedAsset.id ? updatedAsset : a));
     }
     
     setEditingRowId(null);

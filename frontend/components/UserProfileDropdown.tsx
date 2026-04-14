@@ -17,7 +17,7 @@ interface UserProfileDropdownProps {
 export function UserProfileDropdown({ onLogout }: UserProfileDropdownProps) {
   const user = AuthService.getCurrentUser();
 
-  const displayName = user?.name || user?.email || 'User';
+  const displayName = user?.full_name || user?.email || 'User';
   const initials = displayName
     .split(' ')
     .map((n: string) => n[0])

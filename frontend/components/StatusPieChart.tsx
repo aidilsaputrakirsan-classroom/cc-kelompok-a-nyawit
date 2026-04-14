@@ -8,9 +8,13 @@ interface StatusPieChartProps {
 
 const STATUS_COLORS: Record<string, string> = {
   'In Use': '#10B981',
+  'in_use': '#10B981',
   'Available': '#2563EB',
+  'available': '#2563EB',
   'Under Maintenance': '#F59E0B',
-  'Retired': '#9CA3AF'
+  'maintenance': '#F59E0B',
+  'Retired': '#9CA3AF',
+  'decommissioned': '#9CA3AF'
 };
 
 export function StatusPieChart({ assets }: StatusPieChartProps) {

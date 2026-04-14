@@ -32,10 +32,13 @@ export function useAssets(options: UseAssetsOptions = {}) {
             setError(null);
             // Ensure categories are loaded first
             await fetchCategories();
+            console.log('Fetching assets from API...');
             const data = await AssetAPI.getAll(options);
+            console.log('Assets fetched:', data.length);
             setAssets(data);
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Failed to fetch assets';
+            console.error('Error fetching assets:', err);
             setError(message);
             toast({
                 title: 'Error',
@@ -71,25 +74,15 @@ export function useAssets(options: UseAssetsOptions = {}) {
         }
     };
 
-    const updateAsset = async (assetCode: string, data: Partial<Asset>, locationId?: number): Promise<Asset | null> => {
+    const updateAsset = async (assetId: string, data: Partial<Asset>, locationId?: number): Promise<Asset | null> => {
         try {
-            // Find the backend ID from the asset code
-            const backendAssets = await AssetAPI.getAll();
-            const backendAsset = backendAssets.find(a => a.id === assetCode);
-            if (!backendAsset) {
-                throw new Error('Asset not found');
-            }
-
-            // We need to get the numeric ID from the backend
-            // For now, we'll need to fetch the raw backend data
-            const allBackendAssets = await fetch(`${AssetAPI['getAll']}`).catch(() => null);
-
+            const updatedAsset = await AssetAPI.update({ ...data, id: assetId }, locationId);
+            setAssets((prev) => prev.map(a => a.id === assetId ? updatedAsset : a));
             toast({
                 title: 'Success',
                 description: 'Asset updated successfully',
             });
-            await fetchAssets();
-            return null; // Return null for now as update needs backend ID
+            return updatedAsset;
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Failed to update asset';
             toast({
@@ -101,13 +94,14 @@ export function useAssets(options: UseAssetsOptions = {}) {
         }
     };
 
-    const deleteAsset = async (assetCode: string): Promise<boolean> => {
+    const deleteAsset = async (assetId: string): Promise<boolean> => {
         try {
+            await AssetAPI.delete(assetId);
+            setAssets((prev) => prev.filter(a => a.id !== assetId));
             toast({
                 title: 'Success',
                 description: 'Asset deleted successfully',
             });
-            await fetchAssets();
             return true;
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Failed to delete asset';

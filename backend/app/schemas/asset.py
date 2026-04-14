@@ -70,4 +70,4 @@ class AssetRead(AssetBase):
     category: CategoryBrief | None = None
     location_ref: LocationBrief | None = None
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, extra='ignore')

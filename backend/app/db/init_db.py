@@ -136,12 +136,6 @@ def seed_assets(db: Session) -> None:
         logger.warning("Categories not found, skipping asset seed")
         return
     
-    # Get location IDs
-    locations = db.query(Location).all()
-    if not locations:
-        logger.warning("Locations not found, skipping asset seed")
-        return
-    
     # Sample assets: Thin Client, PC Desktop, IP Phone
     assets = [
         Asset(
@@ -149,7 +143,7 @@ def seed_assets(db: Session) -> None:
             name="Thin Client HP T630",
             type="Thin Client",
             category_id=hardware_cat.id,
-            location_id=locations[0].id,
+            location_id=1,
             status=AssetStatus.AVAILABLE,
             assigned_to="Unassigned",
             purchase_date=date(2024, 1, 15),
@@ -164,7 +158,7 @@ def seed_assets(db: Session) -> None:
             name="Thin Client HP T630",
             type="Thin Client",
             category_id=hardware_cat.id,
-            location_id=locations[0].id,
+            location_id=1,
             status=AssetStatus.AVAILABLE,
             assigned_to="Unassigned",
             purchase_date=date(2024, 1, 15),
@@ -179,7 +173,7 @@ def seed_assets(db: Session) -> None:
             name="PC Desktop Dell OptiPlex",
             type="Desktop",
             category_id=hardware_cat.id,
-            location_id=locations[1].id,
+            location_id=2,
             status=AssetStatus.IN_USE,
             assigned_to="John Smith",
             purchase_date=date(2023, 6, 1),
@@ -194,7 +188,7 @@ def seed_assets(db: Session) -> None:
             name="PC Desktop Dell OptiPlex",
             type="Desktop",
             category_id=hardware_cat.id,
-            location_id=locations[1].id,
+            location_id=2,
             status=AssetStatus.IN_USE,
             assigned_to="Sarah Johnson",
             purchase_date=date(2023, 6, 1),
@@ -205,30 +199,15 @@ def seed_assets(db: Session) -> None:
             model="OptiPlex 7090"
         ),
         Asset(
-            asset_code="DESK-003",
-            name="PC Desktop Lenovo ThinkCentre",
-            type="Desktop",
-            category_id=hardware_cat.id,
-            location_id=locations[2].id,
-            status=AssetStatus.AVAILABLE,
-            assigned_to="Unassigned",
-            purchase_date="2023-08-15",
-            last_update="2023-08-15",
-            condition=AssetCondition.GOOD,
-            serial_number="SNDesk003",
-            brand="Lenovo",
-            model="ThinkCentre M70q"
-        ),
-        Asset(
             asset_code="IPPH-001",
             name="IP Phone Cisco 8841",
             type="IP Phone",
             category_id=peripherals_cat.id,
-            location_id=locations[0].id,
+            location_id=1,
             status=AssetStatus.IN_USE,
             assigned_to="John Smith",
-            purchase_date="2023-03-10",
-            last_update="2024-01-20",
+            purchase_date=date(2023, 3, 10),
+            last_update=date(2024, 1, 20),
             condition=AssetCondition.GOOD,
             serial_number="SNIP001",
             brand="Cisco",
@@ -239,11 +218,11 @@ def seed_assets(db: Session) -> None:
             name="IP Phone Cisco 8841",
             type="IP Phone",
             category_id=peripherals_cat.id,
-            location_id=locations[0].id,
+            location_id=1,
             status=AssetStatus.IN_USE,
             assigned_to="Sarah Johnson",
-            purchase_date="2023-03-10",
-            last_update="2024-01-20",
+            purchase_date=date(2023, 3, 10),
+            last_update=date(2024, 1, 20),
             condition=AssetCondition.GOOD,
             serial_number="SNIP002",
             brand="Cisco",
@@ -254,11 +233,11 @@ def seed_assets(db: Session) -> None:
             name="IP Phone Yealink T46S",
             type="IP Phone",
             category_id=peripherals_cat.id,
-            location_id=locations[1].id,
+            location_id=2,
             status=AssetStatus.AVAILABLE,
             assigned_to="Unassigned",
-            purchase_date="2023-05-20",
-            last_update="2023-05-20",
+            purchase_date=date(2023, 5, 20),
+            last_update=date(2023, 5, 20),
             condition=AssetCondition.EXCELLENT,
             serial_number="SNIP003",
             brand="Yealink",

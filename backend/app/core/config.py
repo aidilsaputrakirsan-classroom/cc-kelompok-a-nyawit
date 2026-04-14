@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -6,7 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     app_name: str = "IT Asset Management API"
     app_env: str = "development"
-    database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/it_asset_db"
+    database_url: str = f"sqlite:///{os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'data', 'it_asset.db')}"
     
     # JWT Settings
     secret_key: str = "your-super-secret-key-change-in-production"
