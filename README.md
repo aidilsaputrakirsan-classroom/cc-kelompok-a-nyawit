@@ -2,6 +2,11 @@
 
 ## Tim Pengembang
 
+| Nama | NIM | Peran |
+|------|-----|-------|
+| Ilham Ahmad Fahriji | 10231042 | Lead Backend & Lead DevOps |
+| Putu Ngurah Semara | 10231075 | Lead Frontend & Lead QA & Docs |
+
 ## Deskripsi Proyek
 Sistem Manajemen Aset IT adalah platform khusus yang dirancang untuk mengelola dan mendata seluruh infrastruktur perangkat keras perusahaan. Berbeda dengan sistem inventaris umum, aplikasi ini difokuskan pada kebutuhan spesifik departemen IT, mulai dari pengelolaan perangkat di *data center* hingga perangkat *endpoint* yang digunakan oleh karyawan.
 
