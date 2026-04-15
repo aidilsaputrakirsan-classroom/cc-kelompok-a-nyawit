@@ -1,5 +1,45 @@
 # IT Asset Management System (Sistem Manajemen Aset IT)
 
+## Tim Pengembang
+
+| Nama | NIM | Peran |
+|------|-----|-------|
+| Ilham Ahmad Fahriji | 10231042 | Lead Backend & Lead DevOps |
+| Putu Ngurah Semara | 10231075 | Lead Frontend & Lead QA & Docs |
+
+## Arsitektur Sistem
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Client (Browser)                        │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Nginx (Port 80)                            │
+│  ┌─────────────────────┐    ┌────────────────────────────────┐ │
+│  │   React Frontend    │    │      Reverse Proxy             │ │
+│  │   (Static Files)    │───▶│   /api → uvicorn:8000          │ │
+│  │                     │    │   /docs → Swagger UI           │ │
+│  └─────────────────────┘    └────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                  Uvicorn (Port 8000)                            │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐  │
+│  │  FastAPI     │  │  JWT Auth    │  │  SQLAlchemy ORM       │  │
+│  │  REST API    │  │  RBAC        │  │                       │  │
+│  └──────────────┘  └──────────────┘  └───────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                 SQLite / PostgreSQL                             │
+│              (data/it_asset.db)                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
 ## Deskripsi Proyek
 Sistem Manajemen Aset IT adalah platform khusus yang dirancang untuk mengelola dan mendata seluruh infrastruktur perangkat keras perusahaan. Berbeda dengan sistem inventaris umum, aplikasi ini difokuskan pada kebutuhan spesifik departemen IT, mulai dari pengelolaan perangkat di *data center* hingga perangkat *endpoint* yang digunakan oleh karyawan.
 
@@ -7,25 +47,30 @@ Sistem ini membantu administrator IT dalam menjaga transparansi distribusi aset,
 
 ## Teknologi yang Digunakan
 
-### Frontend
-- **Framework:** React 18 + TypeScript
-- **Build Tool:** Vite
-- **Styling:** Tailwind CSS
-- **UI Components:** Radix UI
-- **Package Manager:** Bun
-- **Icons:** Lucide React
+### Tech Stack
 
-### Backend
-- **Framework:** FastAPI (Python 3.12)
-- **Database:** SQLite (default) atau PostgreSQL
-- **ORM:** SQLAlchemy
-- **Auth:** JWT (Python-Jose)
-- **Server:** Uvicorn
+| Layer | Technology | Version |
+|-------|------------|---------|
+| **Frontend** | React + TypeScript | React 18 |
+| **Build Tool** | Vite | Latest |
+| **Styling** | Tailwind CSS | Latest |
+| **UI Components** | Radix UI | Latest |
+| **Package Manager** | Bun | Latest |
+| **Icons** | Lucide React | Latest |
+| **Backend** | FastAPI (Python) | 3.12 |
+| **Database** | SQLite / PostgreSQL | - |
+| **ORM** | SQLAlchemy | Latest |
+| **Auth** | JWT (Python-Jose) | Latest |
+| **Server** | Uvicorn | Latest |
+| **Web Server** | Nginx | Latest |
+| **Container** | Docker | Latest |
+| **Process Manager** | Supervisord | Latest |
 
-### Deployment
-- **Container:** Docker
-- **Web Server:** Nginx
-- **Process Manager:** Supervisord
+### Arsitektur deployment menggunakan Docker dengan pattern berikut:
+- **Multi-stage Build**: Frontend di-build terlebih dahulu, kemudian hasil build-nya di-copy ke container final
+- **Supervisord**: Mengelola proses Nginx dan Uvicorn secara bersamaan dalam satu container
+- **Nginx**: Serve static frontend dan sebagai reverse proxy untuk API backend
+- **SQLite**: Database disimpan di volume untuk persistensi data
 
 ---
 
@@ -334,7 +379,27 @@ cc-kelompok-a-nyawit/
 
 ---
 
-## Lisensi &Credits
+## Lisensi & Credits
 
 - Proyek ini merupakan bagian dari tugas Cloud Computing Kelompok A Nyawit.
-- Framework: React, FastAPI, SQLite/PostgreSQL, Nginx, Supervisord
+- **Framework:** React, FastAPI, SQLite/PostgreSQL, Nginx, Supervisord
+
+## Peran Tim
+
+### Ilham Ahmad Fahriji (10231042)
+**Lead Backend & Lead DevOps**
+- Merancang dan mengembangkan REST API dengan FastAPI
+- Mengimplementasikan sistem autentikasi JWT dan RBAC
+- Mengatur database dengan SQLAlchemy
+- Membuat Docker container dan docker-compose
+- Mengkonfigurasi Nginx sebagai reverse proxy
+- Mengelola deployment dan CI/CD
+
+### Putu Ngurah Semara (10231075)
+**Lead Frontend & Lead QA & Docs**
+- Merancang dan mengembangkan UI dengan React + TypeScript
+- Mengimplementasikan desain dengan Tailwind CSS dan Radix UI
+- Mengintegrasikan frontend dengan backend API
+- Membuat dokumentasi API dengan Swagger UI
+- Menguji fungsionalitas sistem secara menyeluruh
+- Menulis dokumentasi proyek dan user guide
