@@ -2,44 +2,6 @@
 
 ## Tim Pengembang
 
-| Nama | NIM | Peran |
-|------|-----|-------|
-| Ilham Ahmad Fahriji | 10231042 | Lead Backend & Lead DevOps |
-| Putu Ngurah Semara | 10231075 | Lead Frontend & Lead QA & Docs |
-
-## Arsitektur Sistem
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Client (Browser)                        │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      Nginx (Port 80)                            │
-│  ┌─────────────────────┐    ┌────────────────────────────────┐ │
-│  │   React Frontend    │    │      Reverse Proxy             │ │
-│  │   (Static Files)    │───▶│   /api → uvicorn:8000          │ │
-│  │                     │    │   /docs → Swagger UI           │ │
-│  └─────────────────────┘    └────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                  Uvicorn (Port 8000)                            │
-│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────┐  │
-│  │  FastAPI     │  │  JWT Auth    │  │  SQLAlchemy ORM       │  │
-│  │  REST API    │  │  RBAC        │  │                       │  │
-│  └──────────────┘  └──────────────┘  └───────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                 SQLite / PostgreSQL                             │
-│              (data/it_asset.db)                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
-
 ## Deskripsi Proyek
 Sistem Manajemen Aset IT adalah platform khusus yang dirancang untuk mengelola dan mendata seluruh infrastruktur perangkat keras perusahaan. Berbeda dengan sistem inventaris umum, aplikasi ini difokuskan pada kebutuhan spesifik departemen IT, mulai dari pengelolaan perangkat di *data center* hingga perangkat *endpoint* yang digunakan oleh karyawan.
 
