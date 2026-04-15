@@ -32,7 +32,7 @@ export function GlobalSearch() {
         asset.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
         asset.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         asset.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        asset.assignedTo.toLowerCase().includes(searchQuery.toLowerCase())
+        (asset.assignedTo || '').toLowerCase().includes(searchQuery.toLowerCase())
       ).slice(0, 8)
     : [];
 

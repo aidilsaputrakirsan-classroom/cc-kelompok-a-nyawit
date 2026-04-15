@@ -418,13 +418,17 @@ function PrintReportTab() {
 export function AssetManagementPage() {
   const { assets: allAssets, loading, error, refetch, updateAsset, createAsset } = useAssets();
 
-  const handleAddAsset = async (asset: Omit<Asset, 'id'> & { asset_code: string }, locationId?: number) => {
-    await createAsset(asset, locationId);
+  const handleAddAsset = async (asset: Asset, locationId?: number) => {
+    const assetData = {
+      ...asset,
+      asset_code: asset.asset_code || `${asset.category?.substring(0, 3).toUpperCase()}-${Date.now()}`,
+    };
+    await createAsset(assetData as Omit<Asset, 'id'> & { asset_code: string }, locationId);
     refetch();
   };
 
-  const handleEditAsset = async (asset: Asset, locationId?: number) => {
-    await updateAsset(asset.id, asset, locationId);
+  const handleEditAsset = async (updatedAsset: Asset, locationId?: number) => {
+    await updateAsset(updatedAsset.id, updatedAsset, locationId);
     refetch();
   };
 

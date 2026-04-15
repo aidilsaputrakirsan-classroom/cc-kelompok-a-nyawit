@@ -5,7 +5,9 @@ Sistem Manajemen Aset IT adalah platform khusus yang dirancang untuk mengelola d
 
 Sistem ini membantu administrator IT dalam menjaga transparansi distribusi aset, memantau kesehatan perangkat, serta memastikan efisiensi dalam perencanaan kapasitas jaringan dan server.
 
-## Tech Stack
+## Teknologi yang Digunakan
+
+### Frontend
 - **Framework:** React 18 + TypeScript
 - **Build Tool:** Vite
 - **Styling:** Tailwind CSS
@@ -13,296 +15,199 @@ Sistem ini membantu administrator IT dalam menjaga transparansi distribusi aset,
 - **Package Manager:** Bun
 - **Icons:** Lucide React
 
-## Instalasi Frontend
+### Backend
+- **Framework:** FastAPI (Python 3.12)
+- **Database:** SQLite (default) atau PostgreSQL
+- **ORM:** SQLAlchemy
+- **Auth:** JWT (Python-Jose)
+- **Server:** Uvicorn
 
-### Prerequisites
-Pastikan Anda sudah menginstall:
-- **Bun** (package manager) - [Download Bun](https://bun.sh)
-- **Git** - untuk clone repository
-
-### Install Bun (Windows)
-Jika Bun belum terinstall, jalankan perintah berikut di PowerShell:
-```powershell
-powershell -c "irm bun.sh/install.ps1|iex"
-```
-
-Setelah instalasi selesai, restart terminal Anda.
-
-### Langkah-langkah Instalasi
-
-1. **Clone Repository**
-   ```bash
-   git clone https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit.git
-   cd cc-kelompok-a-nyawit
-   ```
-
-2. **Checkout ke Branch Putu**
-   ```bash
-   git checkout Putu
-   ```
-
-3. **Install Dependencies**
-   ```bash
-   bun install
-   ```
-
-4. **Jalankan Development Server**
-   ```bash
-   bun dev
-   ```
-
-   Aplikasi akan berjalan di: **http://localhost:5173/**
-
-### Perintah Tersedia
-
-| Perintah | Deskripsi |
-|----------|-----------|
-| `bun dev` | Menjalankan development server |
-| `bun build` | Build aplikasi untuk production |
-| `bun preview` | Preview production build secara lokal |
-| `bun lint` | Menjalankan ESLint untuk code quality |
-
-### Struktur Folder
-
-```
-cc-kelompok-a-nyawit/
-├── app/                    # Main application entry
-├── components/             # React components
-│   ├── ui/                # Reusable UI components
-│   ├── AssetTable.tsx     # Asset management table
-│   ├── MetricCards.tsx    # Dashboard metrics
-│   └── ...
-├── pages/                  # Page components
-│   ├── InventoryPage.tsx
-│   ├── AnalyticsPage.tsx
-│   ├── ReportsPage.tsx
-│   └── SettingsPage.tsx
-├── data/                   # Mock data & types
-├── hooks/                  # Custom React hooks
-├── lib/                    # Utility functions
-└── src/                    # Entry point
-    ├── main.tsx           # React app initialization
-    └── index.css          # Global styles
-```
-
-### Troubleshooting
-
-**Masalah: `bun: command not found`**
-- Pastikan Bun sudah terinstall dengan benar
-- Restart terminal Anda setelah instalasi Bun
-- Cek PATH environment variable
-
-**Masalah: Port 5173 sudah digunakan**
-- Ubah port di `vite.config.ts` atau
-- Hentikan aplikasi lain yang menggunakan port tersebut
-
-## Fitur Utama
-
-### 1. Manajemen Data Barang (Asset Inventory)
-Fitur inti untuk mendata setiap perangkat keras dengan detail teknis yang mendalam.
-- **Detail Teknis:** Mencatat Serial Number, Brand, Model, Spesifikasi (RAM, CPU, IP Address), dan Tanggal Pembelian.
-- **Identifikasi Unik:** Setiap aset diberikan ID unik untuk memudahkan pelacakan fisik.
-
-### 2. Kategorisasi Aset
-Mengelompokkan perangkat untuk mempermudah manajemen dan pelaporan:
-- **Network Devices:** Router (untuk failover ISP), Switch (seri Cisco Nexus, Catalyst, dll), Access Point, dan Firewall.
-- **Server Infrastructure:** Physical Servers, Storage Arrays, dan UPS.
-- **Endpoint:** Laptop/Macbook karyawan, Monitor, dan perangkat periferal lainnya.
-- **Cabling & Accessories:** Manajemen stok kabel (Fiber Optic, UTP) dan transceiver.
-
-### 3. Pemetaan Lokasi Fisik (Rack & Location Management)
-Fitur untuk melacak di mana perangkat berada secara fisik.
-- **Lokasi Rak:** Penentuan nomor rak (U-position) di dalam *data center*.
-- **Lokasi Kantor:** Cabang, ruang kerja, atau gudang penyimpanan.
-
-### 4. Pelacakan Status Barang
-Memantau siklus hidup aset secara *real-time*:
-- **Tersedia (Available):** Barang siap digunakan atau dipinjam.
-- **Dipinjam (In Use/Borrowed):** Perangkat sedang digunakan oleh karyawan atau terpasang di jaringan aktif.
-- **Rusak (Maintenance/Broken):** Perangkat dalam perbaikan atau perlu diganti.
-- **Decommissioned:** Perangkat yang sudah tidak layak pakai dan ditarik dari peredaran.
-
-### 5. Log Peminjaman & Riwayat
-Mencatat riwayat penggunaan aset, terutama untuk perangkat *endpoint* (laptop), sehingga administrator tahu siapa yang menggunakan barang tersebut dan sejak kapan.
-
-### 6. Sistem Autentikasi JWT (Baru!)
-Sistem dilengkapi dengan autentikasi berbasis token JWT untuk keamanan:
-- **Role-based Access Control (RBAC):** Tiga level pengguna - Admin, Manager, dan User
-- **Token-based Authentication:** Login dengan JWT token yang aman
-- **Protected Endpoints:** Semua endpoint API dilindungi dengan autentikasi
-- **Default Admin:** Pengguna pertama yang mendaftar otomatis menjadi admin
-
-## Target Pengguna
-- **IT Infrastructure Engineer/Sysadmin:** Untuk memantau perangkat jaringan dan server.
-- **IT Support/Procurement:** Untuk manajemen stok laptop dan aset kantor.
-- **IT Manager:** Untuk pelaporan aset perusahaan secara berkala.
+### Deployment
+- **Container:** Docker
+- **Web Server:** Nginx
+- **Process Manager:** Supervisord
 
 ---
-*Proyek ini merupakan bagian dari tugas Cloud Computing Kelompok A Nyawit.*
 
-## Backend API (FastAPI + PostgreSQL + JWT Auth)
+## Cara Menjalankan
 
-Struktur backend tersedia di folder `backend/` dengan stack:
-- `FastAPI` untuk REST API
-- `SQLAlchemy` untuk ORM
-- `PostgreSQL` sebagai database utama
-- `JWT` untuk autentikasi
-- `Passlib` untuk hashing password
+### Pengembangan (Development)
 
-### Fitur Backend yang Disediakan
-- **Autentikasi:**
-  - Register user (`/api/v1/auth/register`)
-  - Login dengan JWT (`/api/v1/auth/login`)
-  - Get current user (`/api/v1/auth/me`)
-- **Manajemen User (Admin only):**
-  - CRUD users (`/api/v1/users`)
-  - Role management (admin, manager, user)
-- **Kategori:** CRUD kategori aset (`/api/v1/categories`)
-- **Aset:** CRUD aset IT (`/api/v1/assets`)
-- **Log Peminjaman:** Log peminjaman dan pengembalian aset (`/api/v1/borrow-logs`)
-- **Health Check:** (`/api/v1/health`)
+#### Frontend
+```bash
+cd frontend
+bun install
+bun dev
+```
+Aplikasi frontend berjalan di: **http://localhost:5173/**
+
+Backend harus berjalan secara terpisah (lihat bagian Backend di bawah).
+
+#### Backend dengan Docker
+```bash
+cd backend
+docker compose up -d --build
+```
+
+#### Backend tanpa Docker
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate  # Windows
+# source .venv/bin/activate  # Linux/Mac
+pip install -r requirements.txt
+
+# Buat database SQLite atau configure PostgreSQL
+#汕头置 .env sesuai kebutuhan
+uvicorn app.main:app --reload
+```
+
+Backend API: **http://localhost:8000**
+
+---
+
+### Produksi dengan Docker (Full Stack)
+
+#### Prerequisites
+- Docker Desktop terinstall
+- Docker Compose terinstall
+
+#### Langkah Menjalankan
+```bash
+# Clone dan masuk ke direktori project
+git clone https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit.git
+cd cc-kelompok-a-nyawit
+
+# Build dan jalankan container
+docker compose up -d --build
+
+# Cek status container
+docker compose ps
+```
+
+#### Akses Aplikasi
+
+| Service | URL | Keterangan |
+|---------|-----|-----------|
+| Frontend | http://localhost | Halaman utama (React) |
+| API | http://localhost:8000 | Backend API |
+| Swagger UI | http://localhost:8000/docs | Dokumentasi API Interaktif |
+| ReDoc | http://localhost:8000/redoc | Dokumentasi API (ReDoc) |
+
+#### Default Users
+Setelah container berjalan, sistem membuat user default:
+- **Admin:** username=`admin`, password=`admin123`
+- **IT Staff:** username=`it`, password=`it123`
+- **Tech Support:** username=`tech`, password=`tech123`
+
+**PENTING:** Ganti password default setelah login pertama!
+
+#### Hentikan Container
+```bash
+docker compose down
+```
+
+Untuk menghapus volume data:
+```bash
+docker compose down -v
+```
+
+---
+
+## Troubleshooting Docker
+
+### Masalah: Container Selalu Restart Loop
+
+**Gejala:** Container terus mencoba restart
+
+**Penyebab:** Health check gagal karena path salah
+
+**Solusi:**
+1. Pastikan menggunakan konfigurasi docker-compose.yml yang sudah diperbarui
+2. Health check menggunakan `/` (root endpoint) bukan `/api/`
+3. Cek logs:
+```bash
+docker compose logs
+```
+
+### Masalah: 502 Bad Gateway
+
+**Penyebab:** Nginx tidak bisa menghubungi uvicorn
+
+**Solusi:**
+1. Cek uvicorn berjalan:
+```bash
+docker compose exec app ps aux
+```
+2. Cek port 8000 tidak digunakan aplikasi lain
+
+### Masalah: Database Error
+
+**Penyebab:** Permission atau path database salah
+
+**Solusi:**
+1. Cek folder data ada dan dapat ditulis:
+```bash
+ls -la data/
+```
+2. Jika menggunakan Docker Desktop pada Windows, gunakan WSL2 backend
+
+---
+
+## Struktur API
+
+### Endpoints
+
+| Method | Endpoint | Deskripsi |
+|--------|----------|-----------|
+| GET | / | Health check root |
+| GET | /api/v1/health | Health check API |
+| POST | /api/v1/auth/register | Register user baru |
+| POST | /api/v1/auth/login | Login |
+| GET | /api/v1/auth/me | Get current user |
+| GET | /api/v1/users | List users (admin) |
+| GET | /api/v1/categories | List kategori |
+| POST | /api/v1/categories | Create kategori |
+| GET | /api/v1/locations | List lokasi |
+| POST | /api/v1/locations | Create lokasi |
+| GET | /api/v1/assets | List aset |
+| POST | /api/v1/assets | Create aset |
+| GET | /api/v1/assets/{id} | Get aset |
+| PUT | /api/v1/assets/{id} | Update aset |
+| DELETE | /api/v1/assets/{id} | Delete aset |
+| GET | /api/v1/borrow-logs | List log peminjaman |
+| POST | /api/v1/borrow-logs | Create log peminjaman |
+| GET | /api/v1/conditions | List kondisi aset |
 
 ### Role & Permissions
 
 | Endpoint | Admin | Manager | User |
 |----------|-------|---------|------|
-| GET /categories | ✅ | ✅ | ✅ |
-| POST /categories | ✅ | ✅ | ❌ |
-| PUT/DELETE /categories | ✅ | ✅ | ❌ |
-| GET /assets | ✅ | ✅ | ✅ |
-| POST/PUT/DELETE /assets | ✅ | ✅ | ❌ |
-| GET /borrow-logs | ✅ | ✅ | ✅ |
-| POST /borrow-logs | ✅ | ✅ | ❌ |
-| GET /users | ✅ | ✅ | ❌ |
-| POST/PUT/DELETE /users | ✅ | ❌ | ❌ |
+| GET categories | ✅ | ✅ | ✅ |
+| POST categories | ✅ | ✅ | ❌ |
+| PUT/DELETE categories | ✅ | ✅ | ❌ |
+| GET assets | ✅ | ✅ | ✅ |
+| POST/PUT/DELETE assets | ✅ | ✅ | ❌ |
+| GET borrow-logs | ✅ | ✅ | ✅ |
+| POST borrow-logs | ✅ | ✅ | ❌ |
+| GET users | ✅ | ✅ | ❌ |
+| POST/PUT/DELETE users | ✅ | ❌ | ❌ |
 
-### Struktur Folder
-```text
-backend/
-  app/
-    api/
-      deps.py          # Authentication dependencies
-      router.py        # Main API router
-      routes/
-        auth.py        # Authentication endpoints
-        users.py       # User management
-        assets.py      # Asset CRUD
-        categories.py  # Category CRUD
-        borrow_logs.py # Borrow log CRUD
-        health.py      # Health check
-    core/
-      config.py        # App configuration
-      security.py      # JWT & password hashing
-    db/
-      database.py      # Database connection
-      init_db.py       # Database initialization
-    models/
-      asset.py         # Asset model
-      base.py          # SQLAlchemy base
-      borrow_log.py    # Borrow log model
-      category.py      # Category model
-      user.py          # User model
-    schemas/
-      asset.py         # Asset schemas
-      borrow_log.py    # Borrow log schemas
-      category.py      # Category schemas
-      user.py          # User schemas
-    main.py            # FastAPI app entry point
-  database/
-    schema.sql         # Database schema
-  tests/
-    test_health.py     # Health check tests
-    test_auth.py       # Auth tests
-    test_users.py      # User management tests
-  requirements.txt
-  .env.example
-  Dockerfile
-  docker-compose.yml
-```
+---
 
-### Menjalankan Full Stack dengan Docker Compose (Recommended)
+## Contoh Penggunaan API
 
-1. Jalankan service API + PostgreSQL + pgAdmin:
-
-```bat
-cd backend
-docker compose up -d --build
-```
-
-2. Cek service berjalan:
-
-```bat
-docker compose ps
-```
-
-3. Buka URL service:
-
-- API: `http://127.0.0.1:8000`
-- Swagger: `http://127.0.0.1:8000/docs`
-- DB GUI (pgAdmin): `http://127.0.0.1:5050`
-
-4. Login pgAdmin:
-
-- Email: `admin@local.dev`
-- Password: `admin123`
-
-5. Tambah server PostgreSQL di pgAdmin dengan parameter:
-
-- Name: `it-asset-db`
-- Host: `postgres`
-- Port: `5432`
-- Username: `postgres`
-- Password: `postgres`
-- Database: `it_asset_db`
-
-6. Default Admin User:
-
-Setelah container berjalan, sistem otomatis membuat admin user:
-- Username: `admin`
-- Password: `admin123`
-
-**IMPORTANT:** Ganti password default setelah login pertama!
-
-7. Stop semua container:
-
-```bat
-docker compose down
-```
-
-Jika ingin sekaligus hapus volume data:
-
-```bat
-docker compose down -v
-```
-
-### API Authentication Flow
-
-1. **Register First User (becomes Admin):**
-```bash
-curl -X POST "http://localhost:8000/api/v1/auth/register" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "admin",
-    "email": "admin@company.com",
-    "password": "admin123",
-    "full_name": "System Administrator"
-  }'
-```
-
-2. **Login:**
+### 1. Login
 ```bash
 curl -X POST "http://localhost:8000/api/v1/auth/login" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "admin",
-    "password": "admin123"
-  }'
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=admin&password=admin123"
 ```
 
 Response:
 ```json
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "access_token": "eyJhbGciOiJIUzI1NiIs...",
   "token_type": "bearer",
   "user": {
     "id": 1,
@@ -313,50 +218,123 @@ Response:
 }
 ```
 
-3. **Use Token in Requests:**
+### 2. Menggunakan Token
 ```bash
 curl -X GET "http://localhost:8000/api/v1/assets" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..."
 ```
 
-### Setup Menjalankan Backend (Tanpa Docker)
-
-1. Buat virtual environment lalu install dependency:
-
+### 3. Create Aset Baru
 ```bash
-cd backend
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
+curl -X POST "http://localhost:8000/api/v1/assets" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "asset_code": "LAP-001",
+    "name": "MacBook Pro M3",
+    "type": "Laptop",
+    "category_id": 1,
+    "location_id": 1,
+    "status": "Available",
+    "condition": "Excellent"
+  }'
 ```
 
-2. Siapkan database PostgreSQL:
+---
 
-- Buat database bernama `it_asset_db`
-- Copy `.env.example` ke `.env` dan sesuaikan konfigurasi
+## Fitur Utama
 
-3. Jalankan API:
+### 1. Manajemen Data Barang (Asset Inventory)
+- Pencatatan detail teknis (Serial Number, Brand, Model, Spesifikasi)
+- ID unik untuk setiap aset
 
-```bash
-uvicorn app.main:app --reload
-```
+### 2. Kategorisasi Aset
+- Hardware (Server, Laptop, Desktop)
+- Software (Lisensi)
+- Peripherals (Monitor, Keyboard, dll)
 
-4. Dokumentasi API:
+### 3. Pemetaan Lokasi Fisik
+- Rack di data center
+- Ruang kantor
+- Gudang penyimpanan
 
-- Swagger UI: `http://127.0.0.1:8000/docs`
-- ReDoc: `http://127.0.0.1:8000/redoc`
+### 4. Status Aset
+- Available (Tersedia)
+- In Use (Sedang Dipakai)
+- Under Maintenance (Perbaikan)
+- Retired (Decommissioned)
 
-### Environment Variables
+### 5. Kondisi Aset
+- Excellent
+- Good
+- Fair
+- Poor
 
+### 6. Log Peminjaman
+Riwayat peminjaman dan pengembalian aset
+
+### 7. Autentikasi JWT
+- Role-based Access Control (Admin, Manager, User)
+- Token-based authentication
+
+---
+
+## Environment Variables
+
+### Docker
+| Variable | Default | Deskripsi |
+|----------|---------|-----------|
+| DATABASE_URL | sqlite:////data/it_asset.db | Database connection string |
+| SECRET_KEY | your-super-secret-key-change-in-production | JWT secret key |
+| APP_ENV | production | Environment (development/production) |
+
+### Development (Backend)
 Buat file `.env` di folder `backend/`:
-
 ```env
 APP_NAME=IT Asset Management API
 APP_ENV=development
-DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/it_asset_db
-SECRET_KEY=your-super-secret-key-change-in-production
+DATABASE_URL=sqlite:///data/it_asset.db
+SECRET_KEY=your-secret-key-change-in-production
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
-**Note:** Untuk production, pastikan untuk mengubah `SECRET_KEY` dengan nilai yang aman dan random!
+---
+
+## Struktur Folder
+
+```
+cc-kelompok-a-nyawit/
+├── frontend/                 # React Frontend
+│   ├── app/                 # Main app component
+│   ├── components/           # React components
+│   │   ├── ui/             # Reusable UI components
+│   │   ├── AssetTable.tsx  # Asset table
+│   │   └── MetricCards.tsx # Dashboard metrics
+│   ├── pages/               # Page components
+│   │   ├── LoginPage.tsx
+│   │   ├── AssetManagementPage.tsx
+│   │   └── ...
+│   ├── lib/                # Utilities & API
+│   └── dist/               # Production build
+├── backend/                  # FastAPI Backend
+│   ├── app/
+│   │   ├── api/           # API routes
+│   │   ├── core/          # Config & Security
+│   │   ├── db/            # Database
+│   │   ├── models/        # SQLAlchemy models
+│   │   └── schemas/       # Pydantic schemas
+│   ├── database/          # SQL schema
+│   └── requirements.txt
+├── data/                    # SQLite database (created at runtime)
+├── docker-compose.yml       # Docker compose config
+├── Dockerfile             # Multi-stage Dockerfile
+└── README.md              # This file
+```
+
+---
+
+## Lisensi &Credits
+
+- Proyek ini merupakan bagian dari tugas Cloud Computing Kelompok A Nyawit.
+- Framework: React, FastAPI, SQLite/PostgreSQL, Nginx, Supervisord

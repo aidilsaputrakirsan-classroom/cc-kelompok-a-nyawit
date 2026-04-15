@@ -338,6 +338,22 @@ export const LocationAPI = {
     },
 };
 
+// Condition API
+export interface ConditionData {
+    id: number;
+    name: string;
+    description: string;
+    color: string;
+    bgColor: string;
+    assetCount: number;
+}
+
+export const ConditionAPI = {
+    getAll: (): Promise<ConditionData[]> => {
+        return fetchWithAuth('/conditions');
+    }
+};
+
 // Auth API
 export interface LoginCredentials {
     username: string;

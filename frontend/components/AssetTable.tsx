@@ -84,8 +84,8 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
     let bValue: string | number = b[sortField as keyof Asset] as string | number;
     
     if (sortField === 'lastUpdate') {
-      aValue = new Date(a.lastUpdate).getTime();
-      bValue = new Date(b.lastUpdate).getTime();
+      aValue = new Date(a.lastUpdate || '').getTime();
+      bValue = new Date(b.lastUpdate || '').getTime();
     }
     
     if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
@@ -435,7 +435,7 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
                             )}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                            {new Date(asset.lastUpdate).toLocaleDateString()}
+                            {asset.lastUpdate ? new Date(asset.lastUpdate).toLocaleDateString() : '-'}
                           </TableCell>
                           <TableCell className="sticky right-0 bg-white" style={{ boxShadow: '-2px 0 4px rgba(0, 0, 0, 0.05)' }}>
                             {isEditing ? (

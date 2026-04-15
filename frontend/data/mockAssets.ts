@@ -5,10 +5,13 @@ export type AssetCondition = 'Excellent' | 'Good' | 'Fair' | 'Poor';
 
 export interface Asset {
   id: string;
+  asset_code?: string;
   name: string;
   type: string;
   category: AssetCategory;
+  category_id?: number;
   location: string;
+  location_id?: number;
   status: AssetStatus;
   assignedTo: string;
   purchaseDate: string;

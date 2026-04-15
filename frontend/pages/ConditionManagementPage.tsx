@@ -1,29 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, Tag, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Tag, Search, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { ConditionAPI, ConditionData } from '@/lib/api';
 
-interface Condition {
-  id: number;
-  name: string;
-  description: string;
-  color: string;
-  bgColor: string;
-  assetCount: number;
-}
-
-const initialConditions: Condition[] = [
-  { id: 1, name: 'Excellent', description: 'Kondisi sempurna, seperti baru', color: '#10B981', bgColor: '#ECFDF5', assetCount: 28 },
-  { id: 2, name: 'Good', description: 'Kondisi baik, sedikit tanda penggunaan', color: '#3B82F6', bgColor: '#DBEAFE', assetCount: 45 },
-  { id: 3, name: 'Fair', description: 'Kondisi cukup, perlu perhatian', color: '#F59E0B', bgColor: '#FEF3C7', assetCount: 19 },
-  { id: 4, name: 'Poor', description: 'Kondisi buruk, perlu perbaikan segera', color: '#EF4444', bgColor: '#FEE2E2', assetCount: 8 },
-];
+type Condition = ConditionData;
 
 const colorOptions = [
   { label: 'Hijau (Baik)', color: '#10B981', bgColor: '#ECFDF5' },
@@ -37,13 +24,31 @@ const colorOptions = [
 type DialogMode = 'add' | 'edit' | null;
 
 export function ConditionManagementPage() {
-  const [conditions, setConditions] = useState<Condition[]>(initialConditions);
+  const [conditions, setConditions] = useState<Condition[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogMode, setDialogMode] = useState<DialogMode>(null);
   const [selectedCondition, setSelectedCondition] = useState<Condition | null>(null);
   const [formData, setFormData] = useState({ name: '', description: '', color: '#10B981', bgColor: '#ECFDF5' });
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const { toast } = useToast();
+
+  const fetchConditions = async () => {
+    setIsLoading(true);
+    try {
+      const data = await ConditionAPI.getAll();
+      setConditions(data);
+    } catch (error) {
+      console.error('Failed to fetch conditions:', error);
+      toast({ title: 'Gagal memuat', description: 'Terjadi kesalahan saat memuat data kondisi.', variant: 'destructive' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchConditions();
+  }, []);
 
   const filteredConditions = conditions.filter(c =>
     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -135,10 +140,16 @@ export function ConditionManagementPage() {
                 <Tag className="h-5 w-5" style={{ color: '#2563EB' }} />
                 <span>Daftar Kondisi</span>
               </div>
-              <Button size="sm" onClick={openAdd} style={{ backgroundColor: '#2563EB', color: '#FFFFFF' }}>
-                <Plus className="h-4 w-4 mr-2" />
-                Tambah Kondisi
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="outline" onClick={fetchConditions} disabled={isLoading}>
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+                <Button size="sm" onClick={openAdd} style={{ backgroundColor: '#2563EB', color: '#FFFFFF' }}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Tambah Kondisi
+                </Button>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent>

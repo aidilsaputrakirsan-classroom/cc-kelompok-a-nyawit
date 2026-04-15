@@ -8,8 +8,8 @@ interface MetricCardsProps {
 
 export function MetricCards({ assets }: MetricCardsProps) {
   const totalAssets = assets.length;
-  const assetsInUse = assets.filter(asset => asset.status === 'In Use' || asset.status === 'in_use').length;
-  const assetsUnderMaintenance = assets.filter(asset => asset.status === 'Under Maintenance' || asset.status === 'maintenance').length;
+  const assetsInUse = assets.filter(asset => asset.status === 'In Use').length;
+  const assetsUnderMaintenance = assets.filter(asset => asset.status === 'Under Maintenance').length;
 
   const metrics = [
     {

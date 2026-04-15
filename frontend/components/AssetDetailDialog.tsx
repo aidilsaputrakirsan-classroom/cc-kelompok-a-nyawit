@@ -139,7 +139,7 @@ export function AssetDetailDialog({ open, onOpenChange, asset }: AssetDetailDial
                   <div>
                     <p className="text-sm font-medium" style={{ color: '#6B7280' }}>Purchase Date</p>
                     <p className="text-base" style={{ color: '#111827' }}>
-                      {new Date(asset.purchaseDate).toLocaleDateString()}
+                      {asset.purchaseDate ? new Date(asset.purchaseDate).toLocaleDateString() : '-'}
                     </p>
                   </div>
                 </div>
@@ -149,7 +149,7 @@ export function AssetDetailDialog({ open, onOpenChange, asset }: AssetDetailDial
                   <div>
                     <p className="text-sm font-medium" style={{ color: '#6B7280' }}>Last Updated</p>
                     <p className="text-base" style={{ color: '#111827' }}>
-                      {new Date(asset.lastUpdate).toLocaleDateString()}
+                      {asset.lastUpdate ? new Date(asset.lastUpdate).toLocaleDateString() : '-'}
                     </p>
                   </div>
                 </div>
