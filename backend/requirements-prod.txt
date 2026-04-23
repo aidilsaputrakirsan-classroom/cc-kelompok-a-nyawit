@@ -1,0 +1,14 @@
+# Production dependencies only (no test/dev packages)
+fastapi
+uvicorn[standard]
+sqlalchemy[asyncio]
+aiosqlite
+pydantic-settings
+pydantic[email]
+python-dotenv
+alembic
+python-multipart
+passlib[bcrypt]
+python-jose[cryptography]
+pyjwt
+email-validator
