@@ -4,16 +4,18 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Search, ChevronUp, ChevronDown, Plus, Pencil, Check, X } from 'lucide-react';
 import { AssetDialog } from '@/components/AssetDialog';
 import { useToast } from '@/hooks/use-toast';
 import { LocationAPI, Location } from '@/lib/api';
-import type { Asset, AssetStatus, AssetCondition } from '@/data/mockAssets';
+import type { Asset, AssetStatus, AssetCondition, AssetCategory } from '@/data/mockAssets';
 
 interface AssetTableProps {
   assets: Asset[];
   onAssetsChange?: (asset: Asset, locationId?: number) => void;
   onEditAsset?: (asset: Asset, locationId?: number) => void;
+  onDeleteAsset?: (assetId: string) => void | Promise<void>;
 }
 
 type SortField = 'id' | 'name' | 'type' | 'location' | 'status' | 'assignedTo' | 'condition' | 'lastUpdate';
@@ -35,13 +37,18 @@ const CONDITION_STYLES: Record<AssetCondition, { bg: string; text: string }> = {
 
 const statuses: AssetStatus[] = ['In Use', 'Available', 'Under Maintenance', 'Retired'];
 const conditions: AssetCondition[] = ['Excellent', 'Good', 'Fair', 'Poor'];
-const assetTypes = ['Laptop', 'Desktop', 'Server', 'Tablet', 'Smartphone', 'Software License', 'OS License', 'Cloud Subscription', 'Antivirus License', 'Design Suite', 'Monitor', 'Keyboard', 'Mouse', 'Printer', 'Webcam', 'Headset', 'Docking Station'];
+const ASSET_TYPES_BY_CATEGORY: Record<AssetCategory, string[]> = {
+  Hardware: ['Thin Client', 'Laptop', 'Desktop', 'Server', 'Tablet', 'Smartphone'],
+  Consumables: ['Toner Printer', 'Tinta Printer', 'Kertas A4', 'Kabel LAN', 'Patch Cord', 'Baterai UPS'],
+  Peripherals: ['Monitor', 'Keyboard', 'Mouse', 'Printer', 'Webcam', 'Headset', 'Docking Station'],
+};
 
-export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTableProps) {
+export function AssetTable({ assets, onAssetsChange, onEditAsset, onDeleteAsset }: AssetTableProps) {
   const [localAssets, setLocalAssets] = useState(assets);
   const [locations, setLocations] = useState<Location[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   const [locationFilter, setLocationFilter] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('id');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -51,6 +58,7 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState<Asset | null>(null);
+  const [deleteConfirmAsset, setDeleteConfirmAsset] = useState<Asset | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -68,15 +76,17 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
   const currentAssets = onAssetsChange ? assets : localAssets;
 
   const availableLocations = Array.from(new Set(currentAssets.map(a => a.location))).sort();
+  const availableTypes = Array.from(new Set(currentAssets.map(a => a.type))).sort();
 
   const filteredAssets = currentAssets.filter(asset => {
     const matchesSearch = 
       asset.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       asset.id.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || asset.status === statusFilter;
+    const matchesType = typeFilter === 'all' || asset.type === typeFilter;
     const matchesLocation = locationFilter === 'all' || asset.location === locationFilter;
     
-    return matchesSearch && matchesStatus && matchesLocation;
+    return matchesSearch && matchesStatus && matchesType && matchesLocation;
   });
 
   const sortedAssets = [...filteredAssets].sort((a, b) => {
@@ -155,6 +165,28 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
     setEditFormData(null);
   };
 
+  const handleDelete = async (assetId: string) => {
+    try {
+      if (onDeleteAsset) {
+        await onDeleteAsset(assetId);
+      } else {
+        setLocalAssets(currentAssets.filter((a) => a.id !== assetId));
+      }
+
+      setDeleteConfirmAsset(null);
+      toast({
+        title: 'Asset deleted successfully',
+        description: `Asset ${assetId} has been removed from the inventory.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to delete asset',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return null;
     return sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
@@ -174,7 +206,7 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
         </CardHeader>
         <CardContent className="p-3 md:p-6 pt-3">
           <div className="space-y-2 md:space-y-3">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-2 md:gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 pointer-events-none" style={{ color: '#6B7280' }} />
                 <Input
@@ -187,6 +219,21 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
                   className="pl-10"
                 />
               </div>
+
+              <Select value={typeFilter} onValueChange={(value) => {
+                setTypeFilter(value);
+                setCurrentPage(1);
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {availableTypes.map(type => (
+                    <SelectItem key={type} value={type}>{type}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               
               <Select value={statusFilter} onValueChange={(value) => {
                 setStatusFilter(value);
@@ -337,7 +384,7 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {assetTypes.map((type) => (
+                                  {(ASSET_TYPES_BY_CATEGORY[rowData.category] || []).map((type) => (
                                     <SelectItem key={type} value={type}>{type}</SelectItem>
                                   ))}
                                 </SelectContent>
@@ -460,15 +507,26 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
                                 </Button>
                               </div>
                             ) : (
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleEditRow(asset)}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Pencil className="h-4 w-4" style={{ color: '#6B7280' }} />
-                              </Button>
+                                <div className="flex gap-1">
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => handleEditRow(asset)}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <Pencil className="h-4 w-4" style={{ color: '#6B7280' }} />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setDeleteConfirmAsset(asset)}
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <X className="h-4 w-4" style={{ color: '#EF4444' }} />
+                                  </Button>
+                                </div>
                             )}
                           </TableCell>
                         </TableRow>
@@ -538,6 +596,26 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset }: AssetTablePr
         asset={selectedAsset}
         onSave={handleSaveAsset}
       />
+
+      <Dialog open={deleteConfirmAsset !== null} onOpenChange={() => setDeleteConfirmAsset(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete Asset?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Asset <strong>{deleteConfirmAsset?.name}</strong> akan dihapus permanen.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteConfirmAsset(null)}>Cancel</Button>
+            <Button
+              className="bg-red-500 text-white hover:bg-red-600"
+              onClick={() => deleteConfirmAsset && handleDelete(deleteConfirmAsset.id)}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

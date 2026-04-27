@@ -18,7 +18,7 @@ const mockReportData: Record<string, any> = {
     ],
     tableData: [
       { category: 'Hardware', total: 145, inUse: 120, rate: '82.8%' },
-      { category: 'Software', total: 68, inUse: 54, rate: '79.4%' },
+      { category: 'Consumables', total: 68, inUse: 54, rate: '79.4%' },
       { category: 'Peripherals', total: 32, inUse: 24, rate: '75.0%' }
     ]
   },

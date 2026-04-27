@@ -7,7 +7,7 @@ interface UseAssetsOptions {
     category_id?: number;
 }
 
-export function useAssets(options: UseAssetsOptions = {}) {
+export function useAssets(options: UseAssetsOptions = {}, realtime: boolean = false) {
     const [assets, setAssets] = useState<Asset[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
@@ -26,9 +26,11 @@ export function useAssets(options: UseAssetsOptions = {}) {
         }
     }, []);
 
-    const fetchAssets = useCallback(async () => {
+    const fetchAssets = useCallback(async (silent: boolean = false) => {
         try {
-            setLoading(true);
+            if (!silent) {
+                setLoading(true);
+            }
             setError(null);
             // Ensure categories are loaded first
             await fetchCategories();
@@ -46,13 +48,26 @@ export function useAssets(options: UseAssetsOptions = {}) {
                 variant: 'destructive',
             });
         } finally {
-            setLoading(false);
+            if (!silent) {
+                setLoading(false);
+            }
         }
     }, [options.status, options.category_id, toast, fetchCategories]);
 
     useEffect(() => {
         fetchAssets();
     }, [fetchAssets]);
+
+    // Add real-time polling if enabled
+    useEffect(() => {
+        if (!realtime) return;
+
+        const interval = setInterval(() => {
+            fetchAssets(true);
+        }, 30000); // Poll every 30 seconds
+
+        return () => clearInterval(interval);
+    }, [realtime, fetchAssets]);
 
     const createAsset = async (asset: Omit<Asset, 'id'> & { asset_code: string }, locationId?: number): Promise<Asset | null> => {
         try {

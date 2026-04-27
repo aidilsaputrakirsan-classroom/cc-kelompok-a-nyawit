@@ -11,7 +11,7 @@ import type { Asset, AssetCategory } from '@/data/mockAssets';
 
 export function DashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<AssetCategory | 'All'>('All');
-  const { assets, loading, error, refetch } = useAssets();
+  const { assets, loading, error, createAsset, updateAsset, deleteAsset } = useAssets({}, true);
 
   const filteredAssets = useMemo(() => {
     if (selectedCategory === 'All') {
@@ -24,25 +24,27 @@ export function DashboardPage() {
     const counts: Record<string, number> = {
       'All': assets.length,
       'Hardware': 0,
-      'Software': 0,
+      'Consumables': 0,
       'Peripherals': 0
     };
-    
+
     assets.forEach((asset: Asset) => {
       counts[asset.category]++;
     });
-    
+
     return counts;
   }, [assets]);
 
-  const handleAddAsset = () => {
-    // Refresh the assets list after adding
-    refetch();
+  const handleAddAsset = async (asset: Asset, locationId?: number) => {
+    await createAsset(asset, locationId);
   };
 
-  const handleEditAsset = () => {
-    // Refresh the assets list after editing
-    refetch();
+  const handleEditAsset = async (asset: Asset, locationId?: number) => {
+    await updateAsset(asset.id, asset, locationId);
+  };
+
+  const handleDeleteAsset = async (assetId: string) => {
+    await deleteAsset(assetId);
   };
 
   if (loading) {
@@ -64,8 +66,8 @@ export function DashboardPage() {
   return (
     <>
       <div className="mb-4 md:mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold" style={{ color: '#111827' }}>Dashboard</h1>
-        <p className="text-xs md:text-sm mt-1" style={{ color: '#6B7280' }}>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-xs md:text-sm mt-1 text-gray-500">
           Manage and track all assets in your organization
         </p>
       </div>
@@ -79,7 +81,7 @@ export function DashboardPage() {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle style={{ color: '#111827' }}>Overview</CardTitle>
+            <CardTitle className="text-gray-900">Overview</CardTitle>
           </CardHeader>
           <div className="px-6 pb-6">
             <MetricCards assets={filteredAssets} />
@@ -95,6 +97,7 @@ export function DashboardPage() {
           assets={filteredAssets} 
           onAssetsChange={handleAddAsset}
           onEditAsset={handleEditAsset}
+          onDeleteAsset={handleDeleteAsset}
         />
       </div>
       <Toaster />

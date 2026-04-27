@@ -1,6 +1,6 @@
-import { LayoutDashboard, ClipboardList, MapPin, Tag, Users } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, MapPin, Tag, Users, ArrowRightLeft } from 'lucide-react';
 
-export type PageType = 'inventory' | 'asset-management' | 'location-management' | 'condition-management' | 'user-management';
+export type PageType = 'inventory' | 'asset-management' | 'location-management' | 'condition-management' | 'user-management' | 'transaction-management';
 
 interface LeftNavigationProps {
   currentPage: PageType;
@@ -13,6 +13,7 @@ const navItems = [
   { id: 'location-management', label: 'Manajemen Lokasi', icon: MapPin },
   { id: 'condition-management', label: 'Manajemen Kondisi', icon: Tag },
   { id: 'user-management', label: 'Manajemen Pengguna', icon: Users },
+  { id: 'transaction-management', label: 'Manajemen Transaksi', icon: ArrowRightLeft },
 ];
 
 export function LeftNavigation({ currentPage, onPageChange }: LeftNavigationProps) {

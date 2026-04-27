@@ -16,10 +16,10 @@ interface AssetDialogProps {
 
 const statuses: AssetStatus[] = ['In Use', 'Available', 'Under Maintenance', 'Retired'];
 const conditions: AssetCondition[] = ['Excellent', 'Good', 'Fair', 'Poor'];
-const categories: AssetCategory[] = ['Hardware', 'Software', 'Peripherals'];
+const categories: AssetCategory[] = ['Hardware', 'Consumables', 'Peripherals'];
 const assetTypes: Record<AssetCategory, string[]> = {
-  Hardware: ['Laptop', 'Desktop', 'Server', 'Tablet', 'Smartphone'],
-  Software: ['Software License', 'OS License', 'Cloud Subscription', 'Antivirus License', 'Design Suite'],
+  Hardware: ['Thin Client', 'Laptop', 'Desktop', 'Server', 'Tablet', 'Smartphone'],
+  Consumables: ['Toner Printer', 'Tinta Printer', 'Kertas A4', 'Kabel LAN', 'Patch Cord', 'Baterai UPS'],
   Peripherals: ['Monitor', 'Keyboard', 'Mouse', 'Printer', 'Webcam', 'Headset', 'Docking Station']
 };
 

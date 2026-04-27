@@ -37,16 +37,29 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        if (response.status === 401) {
+            localStorage.removeItem('asset-manager-session');
+            throw new Error('Session expired or invalid. Silakan login ulang.');
+        }
         throw new Error(error.detail || `HTTP ${response.status}: ${response.statusText}`);
     }
 
-    return response.json();
+    if (response.status === 204) {
+        return null;
+    }
+
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+        return response.json();
+    }
+
+    return response.text();
 }
 
 // Types matching backend schema
 export type AssetStatus = 'In Use' | 'Available' | 'Under Maintenance' | 'Retired';
 export type AssetCondition = 'Excellent' | 'Good' | 'Fair' | 'Poor';
-export type AssetCategory = 'Hardware' | 'Software' | 'Peripherals';
+export type AssetCategory = 'Hardware' | 'Consumables' | 'Peripherals';
 
 export interface Category {
     id: number;
@@ -150,7 +163,7 @@ function mapBackendToFrontend(asset: BackendAsset): Asset {
     // Map category_id to category name
     const categoryMap: Record<number, AssetCategory> = {
         1: 'Hardware',
-        2: 'Software',
+        2: 'Consumables',
         3: 'Peripherals',
     };
 
@@ -210,7 +223,7 @@ function mapFrontendToCreate(asset: Omit<Asset, 'id'> & { asset_code: string }, 
 function getCategoryId(category: AssetCategory): number {
     const map: Record<AssetCategory, number> = {
         'Hardware': 1,
-        'Software': 2,
+        'Consumables': 2,
         'Peripherals': 3,
     };
     return map[category];
@@ -333,6 +346,64 @@ export const LocationAPI = {
 
     delete: (id: number): Promise<void> => {
         return fetchWithAuth(`/locations/${id}`, {
+            method: 'DELETE',
+        });
+    },
+};
+
+// Transaction API
+export type TransactionType = 'adjustment out' | 'adjustment in' | 'mutasi in' | 'mutasi out' | 'in' | 'out';
+
+export interface Transaction {
+    id: number;
+    asset_id: number;
+    from_location_id: number | null;
+    to_location_id: number | null;
+    transaction_type: TransactionType;
+    quantity: number;
+    notes: string | null;
+    created_by: number | null;
+    created_at: string;
+    asset?: Asset;
+    from_location?: Location;
+    to_location?: Location;
+    creator?: User;
+}
+
+export interface TransactionCreate {
+    asset_id: number;
+    from_location_id?: number;
+    to_location_id?: number;
+    transaction_type: TransactionType;
+    quantity?: number;
+    notes?: string;
+}
+
+export const TransactionAPI = {
+    getAll: (): Promise<Transaction[]> => {
+        return fetchWithAuth('/transactions');
+    },
+
+    getById: (id: number): Promise<Transaction> => {
+        return fetchWithAuth(`/transactions/${id}`);
+    },
+
+    create: (data: TransactionCreate): Promise<Transaction> => {
+        return fetchWithAuth('/transactions', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+
+    update: (id: number, data: Partial<TransactionCreate>): Promise<Transaction> => {
+        return fetchWithAuth(`/transactions/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        });
+    },
+
+    delete: (id: number): Promise<void> => {
+        return fetchWithAuth(`/transactions/${id}`, {
             method: 'DELETE',
         });
     },

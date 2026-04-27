@@ -1,5 +1,5 @@
 export type AssetStatus = 'In Use' | 'Available' | 'Under Maintenance' | 'Retired';
-export type AssetCategory = 'Hardware' | 'Software' | 'Peripherals';
+export type AssetCategory = 'Hardware' | 'Consumables' | 'Peripherals';
 
 export type AssetCondition = 'Excellent' | 'Good' | 'Fair' | 'Poor';
 
@@ -20,8 +20,8 @@ export interface Asset {
 }
 
 const assetTypes = {
-  Hardware: ['Laptop', 'Desktop', 'Server', 'Tablet', 'Smartphone'],
-  Software: ['Software License', 'OS License', 'Cloud Subscription', 'Antivirus License', 'Design Suite'],
+  Hardware: ['Thin Client', 'Laptop', 'Desktop', 'Server', 'Tablet', 'Smartphone'],
+  Consumables: ['Toner Printer', 'Tinta Printer', 'Kertas A4', 'Kabel LAN', 'Patch Cord', 'Baterai UPS'],
   Peripherals: ['Monitor', 'Keyboard', 'Mouse', 'Printer', 'Webcam', 'Headset', 'Docking Station']
 };
 
@@ -47,7 +47,7 @@ function getRandomDate(start: Date, end: Date): string {
 
 function generateMockAssets(count: number): Asset[] {
   const assets: Asset[] = [];
-  const categories: AssetCategory[] = ['Hardware', 'Software', 'Peripherals'];
+  const categories: AssetCategory[] = ['Hardware', 'Consumables', 'Peripherals'];
   
   for (let i = 1; i <= count; i++) {
     const category = categories[Math.floor(Math.random() * categories.length)];

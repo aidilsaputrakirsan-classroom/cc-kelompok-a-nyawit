@@ -54,6 +54,10 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
     throw new Error(error.detail || `HTTP ${response.status}: ${response.statusText}`);
   }
 
+  if (response.status === 204) {
+    return null;
+  }
+
   return response.json();
 }
 

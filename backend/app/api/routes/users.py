@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session, joinedload
 
-from app.api.deps import get_db, require_admin
+from app.api.deps import get_db, require_manager_or_admin
 from app.core.security import get_password_hash
 from app.models.user import User, UserRole
 from app.schemas.user import UserCreate, UserRead, UserReadWithAssets, UserUpdate
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 @router.get("", response_model=list[UserRead])
 def list_users(
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_manager_or_admin),
 ) -> list[User]:
     """List all users (admin only)."""
     users = db.scalars(select(User).order_by(User.created_at.desc())).all()
@@ -24,7 +24,7 @@ def list_users(
 def get_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_manager_or_admin),
 ) -> dict:
     """Get a specific user by ID with their created assets (admin only)."""
     user = db.scalar(
@@ -57,7 +57,7 @@ def get_user(
 def create_user(
     payload: UserCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_manager_or_admin),
 ) -> User:
     """Create a new user (admin only)."""
     # Check if username already exists
@@ -98,7 +98,7 @@ def update_user(
     user_id: int,
     payload: UserUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_manager_or_admin),
 ) -> User:
     """Update a user (admin only)."""
     user = db.get(User, user_id)
@@ -139,7 +139,7 @@ def update_user(
 def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_manager_or_admin),
 ) -> None:
     """Delete a user (admin only)."""
     user = db.get(User, user_id)

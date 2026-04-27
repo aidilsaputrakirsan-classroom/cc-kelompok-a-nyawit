@@ -81,10 +81,21 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
-    throw new Error(error.detail || `HTTP ${response.status}: ${response.statusText}`);
+    const apiError = new Error(error.detail || `HTTP ${response.status}: ${response.statusText}`) as Error & { status?: number };
+    apiError.status = response.status;
+    throw apiError;
   }
 
-  return response.json();
+  if (response.status === 204) {
+    return null;
+  }
+
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    return response.json();
+  }
+
+  return response.text();
 }
 
 export function UserManagementPage() {
@@ -102,6 +113,7 @@ export function UserManagementPage() {
     is_active: true
   });
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   // Fetch users on mount
@@ -217,18 +229,35 @@ export function UserManagementPage() {
   };
 
   const handleDelete = async (id: number) => {
+    if (isDeleting) return;
     const user = users.find(u => u.id === id);
     try {
+      setIsDeleting(true);
       await fetchWithAuth(`/users/${id}`, { method: 'DELETE' });
       setDeleteConfirmId(null);
       toast({ title: 'Pengguna dihapus', description: `${user?.username} berhasil dihapus.` });
       fetchUsers();
     } catch (error) {
+      const status = (error as { status?: number })?.status;
+      const message = error instanceof Error ? error.message : 'Gagal menghapus pengguna';
+
+      if (status === 404 && message.toLowerCase().includes('user not found')) {
+        setDeleteConfirmId(null);
+        toast({
+          title: 'Pengguna sudah terhapus',
+          description: 'Data pengguna sudah tidak ada di server. Daftar akan disegarkan.',
+        });
+        fetchUsers();
+        return;
+      }
+
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Gagal menghapus pengguna',
+        description: message,
         variant: 'destructive'
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -561,9 +590,10 @@ export function UserManagementPage() {
             <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>Batal</Button>
             <Button
               onClick={() => deleteConfirmId && handleDelete(deleteConfirmId)}
+              disabled={isDeleting}
               style={{ backgroundColor: '#EF4444', color: '#FFFFFF' }}
             >
-              Hapus
+              {isDeleting ? 'Menghapus...' : 'Hapus'}
             </Button>
           </DialogFooter>
         </DialogContent>

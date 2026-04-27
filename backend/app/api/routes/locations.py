@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, require_admin
+from app.api.deps import get_db, require_manager_or_admin
 from app.models.location import Location
 from app.models.asset import Asset
 from app.models.user import User
@@ -71,7 +71,7 @@ def get_location(
 def create_location(
     payload: LocationCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_manager_or_admin),
 ) -> Location:
     """Create a new location (admin only)."""
     # Check if name already exists
@@ -106,7 +106,7 @@ def update_location(
     location_id: int,
     payload: LocationUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_manager_or_admin),
 ) -> dict:
     """Update a location (admin only)."""
     location = db.get(Location, location_id)
@@ -154,7 +154,7 @@ def update_location(
 def delete_location(
     location_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_manager_or_admin),
 ) -> None:
     """Delete a location (admin only)."""
     location = db.get(Location, location_id)
