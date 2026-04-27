@@ -8,7 +8,7 @@ services:
     container_name: it-asset-management
     ports:
       - "80:80"
-      - "8000:8000"
+      # Port 8000 (uvicorn) hanya diakses internal oleh nginx, tidak perlu di-expose ke host
     volumes:
       - ./data:/data
     environment:

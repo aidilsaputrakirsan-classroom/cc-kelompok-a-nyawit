@@ -1,120 +1,94 @@
+# syntax=docker/dockerfile:1.4
 # Multi-stage build for IT Asset Management (Frontend + Backend in one container)
+# Requires BuildKit: DOCKER_BUILDKIT=1 docker build ...
 
+# ─────────────────────────────────────────────────────────────────────────────
 # Stage 1: Build Frontend
-FROM node:20-slim AS frontend-builder
+# ─────────────────────────────────────────────────────────────────────────────
+FROM oven/bun:1 AS frontend-builder
 
 WORKDIR /app/frontend
 
-# Copy frontend package files
-COPY frontend/package*.json ./
+# Copy file dependency list
+COPY frontend/package.json frontend/bun.lock ./
 
-# Install dependencies (using legacy-peer-deps for compatibility)
-RUN npm install --legacy-peer-deps
+# Install dependencies dengan bun (sangat cepat, dan file bun.lock menjamin versi akurat)
+RUN bun install
 
-# Install rollup native binary for Linux
-RUN npm install @rollup/rollup-linux-x64-gnu --legacy-peer-deps
-
-# Copy frontend source code
+# Copy source code penuh
 COPY frontend/ ./
 
-# Build the frontend
-RUN npm run build
+# Build static assets dengan bun
+RUN bun run build
 
-# Stage 2: Python Backend
-FROM python:3.12-slim AS backend
+# ─────────────────────────────────────────────────────────────────────────────
+# Stage 2: Python dependencies (layer terpisah agar ter-cache)
+# ─────────────────────────────────────────────────────────────────────────────
+FROM python:3.12-slim AS python-deps
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /install
+
+# Hanya copy requirements production (bukan requirements.txt penuh yang
+# mengandung pytest, httpx, psycopg[binary] untuk PostgreSQL, dll.)
+COPY backend/requirements-prod.txt requirements.txt
+
+# --mount=type=cache menyimpan cache pip di host (tidak masuk image)
+# --prefix menaruh hasil install ke /install/packages agar mudah di-copy
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --no-cache-dir --prefix=/install/packages -r requirements.txt
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Stage 3: Runtime (image final)
+# ─────────────────────────────────────────────────────────────────────────────
+FROM python:3.12-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/install/packages/lib/python3.12/site-packages \
     DATABASE_URL="sqlite:////data/it_asset.db"
 
 WORKDIR /app
 
-# Install system dependencies for nginx
+# Install HANYA runtime dependencies sistem:
+#   - nginx   : reverse proxy untuk serve frontend + forward /api ke uvicorn
+#   - supervisor: proses manager untuk nginx & uvicorn dalam satu container
+#   - curl    : diperlukan oleh HEALTHCHECK
+# rm -rf /var/lib/apt/lists/* menghapus APT cache agar layer tetap kecil
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    nginx \
-    supervisor \
+        nginx \
+        supervisor \
+        curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy backend requirements and install Python dependencies
-COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy Python packages dari stage python-deps (bukan re-install)
+COPY --from=python-deps /install/packages /usr/local
 
 # Copy backend source code
 COPY backend/ ./
 
-# Create data directory for SQLite
-RUN mkdir -p /data
-
-# Copy built frontend from stage 1
+# Copy built frontend dari stage frontend-builder ke direktori nginx
 COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
 
-# Create initial database if it doesn't exist
-RUN touch /data/it_asset.db
+# ── Nginx & Supervisord configuration ──────────────────────────────────────────
+# Kita COPY konfigurasi yang dibuat di root backend, sehingga lebih bersih 
+# dan tidak terkena issue parsing here-doc pada line-endings windows
+COPY backend/nginx.conf /etc/nginx/sites-available/default
+COPY backend/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-RUN cat > /etc/nginx/sites-available/default << 'NGINXCONF'
-server {
-    listen 80;
-    server_name localhost;
-    root /usr/share/nginx/html;
-    index index.html;
+# ─────────────────────────────────────────────────────────────────────────────
 
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
+# Volume untuk SQLite database (persisten di luar container)
+VOLUME ["/data"]
 
-    location /api {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /docs {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-    }
-}
-NGINXCONF
-
-RUN cat > /etc/supervisor/conf.d/supervisord.conf << 'EOF'
-[supervisord]
-nodaemon=true
-user=root
-logfile=/dev/null
-logfile_maxbytes=0
-
-[program:nginx]
-command=/usr/sbin/nginx -g "daemon off;"
-autostart=true
-autorestart=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
-
-[program:uvicorn]
-command=uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1
-directory=/app
-autostart=true
-autorestart=true
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
-environment=DATABASE_URL="%(ENV_DATABASE_URL)s",SECRET_KEY="%(ENV_SECRET_KEY)s"
-EOF
-
-# Expose port 80
+# Hanya expose port 80 (port 8000 internal saja, tidak perlu ke host)
 EXPOSE 80
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost/ || exit 1
+# Healthcheck menggunakan curl (sudah terinstall di atas)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD curl -fsS http://localhost/ || exit 1
 
-# Start supervisord (which manages nginx and uvicorn)
+# Jalankan supervisord yang akan mengelola nginx dan uvicorn
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
