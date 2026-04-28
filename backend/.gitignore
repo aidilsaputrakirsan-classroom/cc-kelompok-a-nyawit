@@ -28,6 +28,12 @@ env/
 
 # IDEs
 .vscode/
+
+# SQLite database files
+data/
+*.db
+*.sqlite
+*.sqlite3
 .idea/
 *.swp
 *.swo

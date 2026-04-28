@@ -1,54 +1,76 @@
 import { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { mockAssets } from '@/data/mockAssets';
 import { MetricCards } from '@/components/MetricCards';
 import { StatusPieChart } from '@/components/StatusPieChart';
 import { TypeBarChart } from '@/components/TypeBarChart';
 import { AssetTable } from '@/components/AssetTable';
 import { CategoryTabs } from '@/components/CategoryTabs';
 import { Toaster } from '@/components/ui/toaster';
-
-import type { AssetCategory, Asset } from '@/data/mockAssets';
+import { useAssets } from '@/hooks/useAssets';
+import type { Asset, AssetCategory } from '@/data/mockAssets';
 
 export function DashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<AssetCategory | 'All'>('All');
-  const [allAssets, setAllAssets] = useState<Asset[]>(mockAssets);
+  const { assets, loading, error, createAsset, updateAsset, deleteAsset } = useAssets({}, true);
 
   const filteredAssets = useMemo(() => {
     if (selectedCategory === 'All') {
-      return allAssets;
+      return assets;
     }
-    return allAssets.filter(asset => asset.category === selectedCategory);
-  }, [selectedCategory, allAssets]);
+    return assets.filter((asset: Asset) => asset.category === selectedCategory);
+  }, [selectedCategory, assets]);
 
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {
-      'All': allAssets.length,
+      'All': assets.length,
       'Hardware': 0,
+<<<<<<< HEAD
+=======
+      'Consumables': 0,
+>>>>>>> ff544d2faa163bbeac3612ad527cd6e7a82de964
       'Peripherals': 0
     };
-    
-    allAssets.forEach(asset => {
+
+    assets.forEach((asset: Asset) => {
       counts[asset.category]++;
     });
-    
+
     return counts;
-  }, [allAssets]);
+  }, [assets]);
 
-  const handleAddAsset = (newAsset: Asset) => {
-    setAllAssets([newAsset, ...allAssets]);
+  const handleAddAsset = async (asset: Asset, locationId?: number) => {
+    await createAsset(asset, locationId);
   };
 
-  const handleEditAsset = (updatedAssets: Asset[]) => {
-    setAllAssets(updatedAssets);
+  const handleEditAsset = async (asset: Asset, locationId?: number) => {
+    await updateAsset(asset.id, asset, locationId);
   };
+
+  const handleDeleteAsset = async (assetId: string) => {
+    await deleteAsset(assetId);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-gray-600">Loading assets...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-red-600">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <>
       <div className="mb-4 md:mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold" style={{ color: '#111827' }}>Dashboard</h1>
-        <p className="text-xs md:text-sm mt-1" style={{ color: '#6B7280' }}>
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-xs md:text-sm mt-1 text-gray-500">
           Manage and track all assets in your organization
         </p>
       </div>
@@ -62,7 +84,7 @@ export function DashboardPage() {
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle style={{ color: '#111827' }}>Overview</CardTitle>
+            <CardTitle className="text-gray-900">Overview</CardTitle>
           </CardHeader>
           <div className="px-6 pb-6">
             <MetricCards assets={filteredAssets} />
@@ -78,6 +100,7 @@ export function DashboardPage() {
           assets={filteredAssets} 
           onAssetsChange={handleAddAsset}
           onEditAsset={handleEditAsset}
+          onDeleteAsset={handleDeleteAsset}
         />
       </div>
       <Toaster />

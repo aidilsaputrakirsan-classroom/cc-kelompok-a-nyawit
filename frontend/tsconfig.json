@@ -16,16 +16,21 @@
 
     /* Linting */
     "strict": true,
+    "forceConsistentCasingInFileNames": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
     /* Path Aliases */
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+
+    /* Types */
+    "types": ["vite/client", "node"]
   },
-  "include": ["src", "app", "components", "pages", "lib", "hooks", "data"],
+  "include": ["src", "app", "components", "pages", "lib", "hooks"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

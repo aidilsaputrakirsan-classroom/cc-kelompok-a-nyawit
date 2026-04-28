@@ -1,14 +1,13 @@
+# Production dependencies only (no test/dev packages)
 fastapi
 uvicorn[standard]
 sqlalchemy[asyncio]
-psycopg[binary]
+aiosqlite
 pydantic-settings
 pydantic[email]
 python-dotenv
 alembic
 python-multipart
-pytest
-httpx
 passlib[bcrypt]
 python-jose[cryptography]
 pyjwt

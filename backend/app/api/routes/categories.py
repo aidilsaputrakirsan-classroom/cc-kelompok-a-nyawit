@@ -31,7 +31,6 @@ def create_category(
 @router.get("", response_model=list[CategoryRead])
 def list_categories(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
 ) -> list[Category]:
     categories = db.scalars(select(Category).order_by(Category.name.asc())).all()
     return list(categories)
@@ -41,7 +40,6 @@ def list_categories(
 def get_category(
     category_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
 ) -> Category:
     category = db.get(Category, category_id)
     if not category:

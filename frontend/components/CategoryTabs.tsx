@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { Package, Laptop, Cable } from 'lucide-react';
+=======
+import { Package, Laptop, ShoppingCart, Cable } from 'lucide-react';
+>>>>>>> ff544d2faa163bbeac3612ad527cd6e7a82de964
 import type { AssetCategory } from '@/data/mockAssets';
 
 interface CategoryTabsProps {
@@ -10,6 +14,10 @@ interface CategoryTabsProps {
 const categories = [
   { id: 'All', label: 'All Assets', icon: Package },
   { id: 'Hardware', label: 'Hardware', icon: Laptop },
+<<<<<<< HEAD
+=======
+  { id: 'Consumables', label: 'Consumables', icon: ShoppingCart },
+>>>>>>> ff544d2faa163bbeac3612ad527cd6e7a82de964
   { id: 'Peripherals', label: 'Peripherals', icon: Cable }
 ];
 

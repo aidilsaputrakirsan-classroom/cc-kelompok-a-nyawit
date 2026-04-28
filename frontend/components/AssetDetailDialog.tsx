@@ -2,7 +2,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import type { Asset } from '@/data/mockAssets';
+<<<<<<< HEAD
 import { Package, MapPin, User, Calendar, Activity, Tag, Hash, Barcode, Cpu } from 'lucide-react';
+=======
+import { Package, MapPin, User, Calendar, Activity, Tag } from 'lucide-react';
+>>>>>>> ff544d2faa163bbeac3612ad527cd6e7a82de964
 
 interface AssetDetailDialogProps {
   open: boolean;
@@ -158,14 +162,17 @@ export function AssetDetailDialog({ open, onOpenChange, asset }: AssetDetailDial
                   </div>
                 </div>
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> ff544d2faa163bbeac3612ad527cd6e7a82de964
                 <div className="flex items-start gap-3">
                   <Calendar className="h-5 w-5 mt-0.5" style={{ color: '#6B7280' }} />
                   <div>
                     <p className="text-sm font-medium" style={{ color: '#6B7280' }}>Purchase Date</p>
                     <p className="text-base" style={{ color: '#111827' }}>
-                      {new Date(asset.purchaseDate).toLocaleDateString()}
+                      {asset.purchaseDate ? new Date(asset.purchaseDate).toLocaleDateString() : '-'}
                     </p>
                   </div>
                 </div>
@@ -175,7 +182,7 @@ export function AssetDetailDialog({ open, onOpenChange, asset }: AssetDetailDial
                   <div>
                     <p className="text-sm font-medium" style={{ color: '#6B7280' }}>Last Updated</p>
                     <p className="text-base" style={{ color: '#111827' }}>
-                      {new Date(asset.lastUpdate).toLocaleDateString()}
+                      {asset.lastUpdate ? new Date(asset.lastUpdate).toLocaleDateString() : '-'}
                     </p>
                   </div>
                 </div>

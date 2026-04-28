@@ -1,14 +1,21 @@
 export type AssetStatus = 'In Use' | 'Available' | 'Under Maintenance' | 'Retired';
+<<<<<<< HEAD
 export type AssetCategory = 'Hardware' | 'Peripherals' | 'Consumables';
+=======
+export type AssetCategory = 'Hardware' | 'Consumables' | 'Peripherals';
+>>>>>>> ff544d2faa163bbeac3612ad527cd6e7a82de964
 
 export type AssetCondition = 'Excellent' | 'Good' | 'Fair' | 'Poor';
 
 export interface Asset {
   id: string;
+  asset_code?: string;
   name: string;
   type: string;
   category: AssetCategory;
+  category_id?: number;
   location: string;
+  location_id?: number;
   status: AssetStatus;
   assignedTo: string;
   serialNumber: string;
@@ -17,6 +24,7 @@ export interface Asset {
   purchaseDate: string;
   lastUpdate: string;
   condition: AssetCondition;
+<<<<<<< HEAD
   quantity: number;
 }
 
@@ -35,6 +43,14 @@ export interface Consumable {
 const assetTypes = {
   Hardware: ['Laptop', 'Desktop', 'Server', 'Tablet', 'Smartphone'],
   Peripherals: ['Monitor', 'Keyboard', 'Mouse', 'Printer', 'Webcam', 'Headset', 'Docking Station'],
+=======
+}
+
+const assetTypes = {
+  Hardware: ['Thin Client', 'Laptop', 'Desktop', 'Server', 'Tablet', 'Smartphone'],
+  Consumables: ['Toner Printer', 'Tinta Printer', 'Kertas A4', 'Kabel LAN', 'Patch Cord', 'Baterai UPS'],
+  Peripherals: ['Monitor', 'Keyboard', 'Mouse', 'Printer', 'Webcam', 'Headset', 'Docking Station']
+>>>>>>> ff544d2faa163bbeac3612ad527cd6e7a82de964
 };
 
 const locations = ['Rak A', 'Rak B', 'Rak C', 'Rak D', 'Rak E', 'Rak F', 'Lantai', 'Lemari kaca'];
@@ -80,7 +96,11 @@ function generateModelNumber(type: string, index: number): string {
 
 function generateMockAssets(count: number): Asset[] {
   const assets: Asset[] = [];
+<<<<<<< HEAD
   const categories: Array<'Hardware' | 'Peripherals'> = ['Hardware', 'Peripherals'];
+=======
+  const categories: AssetCategory[] = ['Hardware', 'Consumables', 'Peripherals'];
+>>>>>>> ff544d2faa163bbeac3612ad527cd6e7a82de964
   
   for (let i = 1; i <= count; i++) {
     const category = categories[Math.floor(Math.random() * categories.length)];
@@ -97,10 +117,13 @@ function generateMockAssets(count: number): Asset[] {
     const purchaseDate = getRandomDate(new Date(2020, 0, 1), new Date(2024, 11, 31));
     const lastUpdate = getRandomDate(new Date(2024, 0, 1), new Date(2025, 9, 9));
     const condition = conditions[Math.floor(Math.random() * conditions.length)];
+<<<<<<< HEAD
     const quantity = Math.floor(Math.random() * 5) + 1;
     const serialNumber = generateSerialNumber(type, i);
     const productNumber = generateProductNumber(category, type, i);
     const modelNumber = generateModelNumber(type, i);
+=======
+>>>>>>> ff544d2faa163bbeac3612ad527cd6e7a82de964
 
     assets.push({
       id: generateAssetId(category, i),
@@ -116,14 +139,17 @@ function generateMockAssets(count: number): Asset[] {
       purchaseDate,
       lastUpdate,
       condition,
+<<<<<<< HEAD
       quantity,
+=======
+>>>>>>> ff544d2faa163bbeac3612ad527cd6e7a82de964
     });
   }
   
   return assets;
 }
 
-export const mockAssets = generateMockAssets(100);
+export const mockAssets = generateMockAssets(0);
 
 // ─── Consumables mock data ─────────────────────────────────────────────────────
 

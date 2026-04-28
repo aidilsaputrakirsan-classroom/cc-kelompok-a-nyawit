@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: it-asset-management
+    ports:
+      - "80:80"
+      # Port 8000 (uvicorn) hanya diakses internal oleh nginx, tidak perlu di-expose ke host
+    volumes:
+      - ./data:/data
+    environment:
+      - DATABASE_URL=sqlite:////data/it_asset.db
+      - SECRET_KEY=${SECRET_KEY:-your-super-secret-key-change-in-production}
+      - APP_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

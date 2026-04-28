@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ClipboardList, Plus, Pencil, Trash2, Printer, Search, FileDown, Layers } from 'lucide-react';
 import { AssetTable } from '@/components/AssetTable';
-import { mockAssets } from '@/data/mockAssets';
+import { useAssets } from '@/hooks/useAssets';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import type { Asset } from '@/data/mockAssets';
@@ -20,36 +20,38 @@ interface AssetType {
   id: number;
   category: string;
   name: string;
-  assetCount: number;
 }
 
 const initialAssetTypes: AssetType[] = [
-  { id: 1, category: 'Hardware', name: 'Laptop', assetCount: 22 },
-  { id: 2, category: 'Hardware', name: 'Desktop', assetCount: 15 },
-  { id: 3, category: 'Hardware', name: 'Server', assetCount: 8 },
-  { id: 4, category: 'Hardware', name: 'Tablet', assetCount: 5 },
-  { id: 5, category: 'Hardware', name: 'Smartphone', assetCount: 11 },
-  { id: 6, category: 'Software', name: 'Software License', assetCount: 30 },
-  { id: 7, category: 'Software', name: 'OS License', assetCount: 20 },
-  { id: 8, category: 'Software', name: 'Cloud Subscription', assetCount: 12 },
-  { id: 9, category: 'Software', name: 'Antivirus License', assetCount: 40 },
-  { id: 10, category: 'Software', name: 'Design Suite', assetCount: 6 },
-  { id: 11, category: 'Peripherals', name: 'Monitor', assetCount: 25 },
-  { id: 12, category: 'Peripherals', name: 'Keyboard', assetCount: 30 },
-  { id: 13, category: 'Peripherals', name: 'Mouse', assetCount: 29 },
-  { id: 14, category: 'Peripherals', name: 'Printer', assetCount: 7 },
-  { id: 15, category: 'Peripherals', name: 'Webcam', assetCount: 14 },
-  { id: 16, category: 'Peripherals', name: 'Headset', assetCount: 18 },
-  { id: 17, category: 'Peripherals', name: 'Docking Station', assetCount: 10 },
+  { id: 1, category: 'Hardware', name: 'Thin Client' },
+  { id: 2, category: 'Hardware', name: 'Laptop' },
+  { id: 3, category: 'Hardware', name: 'Desktop' },
+  { id: 4, category: 'Hardware', name: 'Server' },
+  { id: 5, category: 'Hardware', name: 'Tablet' },
+  { id: 6, category: 'Hardware', name: 'Smartphone' },
+  { id: 7, category: 'Hardware', name: 'Printer' },
+  { id: 8, category: 'Hardware', name: 'Monitor' },
+  { id: 9, category: 'Consumables', name: 'Toner Printer' },
+  { id: 10, category: 'Consumables', name: 'Tinta Printer' },
+  { id: 11, category: 'Consumables', name: 'Kertas A4' },
+  { id: 12, category: 'Consumables', name: 'Kabel LAN' },
+  { id: 13, category: 'Consumables', name: 'Patch Cord' },
+  { id: 14, category: 'Consumables', name: 'Baterai UPS' },
+  { id: 15, category: 'Peripherals', name: 'Keyboard' },
+  { id: 16, category: 'Peripherals', name: 'Mouse' },
+  { id: 17, category: 'Peripherals', name: 'Webcam' },
+  { id: 18, category: 'Peripherals', name: 'Headset' },
+  { id: 19, category: 'Peripherals', name: 'Docking Station' },
+  { id: 20, category: 'Peripherals', name: 'USB Hub' },
 ];
 
 const CATEGORY_STYLES: Record<string, { color: string; bg: string }> = {
   Hardware: { color: '#2563EB', bg: '#EFF6FF' },
-  Software: { color: '#10B981', bg: '#ECFDF5' },
+  Consumables: { color: '#10B981', bg: '#ECFDF5' },
   Peripherals: { color: '#F59E0B', bg: '#FEF3C7' },
 };
 
-function AssetTypesTab() {
+function AssetTypesTab({ assets }: { assets: Asset[] }) {
   const [assetTypes, setAssetTypes] = useState<AssetType[]>(initialAssetTypes);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -60,7 +62,15 @@ function AssetTypesTab() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const { toast } = useToast();
 
-  const filtered = assetTypes.filter(t => {
+  const enrichedAssetTypes = useMemo(
+    () => assetTypes.map((type) => ({
+      ...type,
+      assetCount: assets.filter((asset) => asset.category === type.category && asset.type === type.name).length,
+    })),
+    [assetTypes, assets],
+  );
+
+  const filtered = enrichedAssetTypes.filter(t => {
     const matchSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchCat = categoryFilter === 'all' || t.category === categoryFilter;
     return matchSearch && matchCat;
@@ -85,7 +95,7 @@ function AssetTypesTab() {
       setAssetTypes(assetTypes.map(t => t.id === selectedType.id ? { ...t, name: formData.name, category: formData.category } : t));
       toast({ title: 'Jenis aset diperbarui', description: `${formData.name} berhasil diperbarui.` });
     } else {
-      setAssetTypes([...assetTypes, { id: Date.now(), ...formData, assetCount: 0 }]);
+      setAssetTypes([...assetTypes, { id: Date.now(), ...formData }]);
       toast({ title: 'Jenis aset ditambahkan', description: `${formData.name} berhasil ditambahkan.` });
     }
     setDialogOpen(false);
@@ -126,7 +136,7 @@ function AssetTypesTab() {
               <SelectContent>
                 <SelectItem value="all">Semua Kategori</SelectItem>
                 <SelectItem value="Hardware">Hardware</SelectItem>
-                <SelectItem value="Software">Software</SelectItem>
+                <SelectItem value="Consumables">Consumables</SelectItem>
                 <SelectItem value="Peripherals">Peripherals</SelectItem>
               </SelectContent>
             </Select>
@@ -200,7 +210,7 @@ function AssetTypesTab() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Hardware">Hardware</SelectItem>
-                  <SelectItem value="Software">Software</SelectItem>
+                  <SelectItem value="Consumables">Consumables</SelectItem>
                   <SelectItem value="Peripherals">Peripherals</SelectItem>
                 </SelectContent>
               </Select>
@@ -234,6 +244,7 @@ function AssetTypesTab() {
 // ─── Print Report Tab ───────────────────────────────────────────────────────────
 
 function PrintReportTab() {
+  const { assets } = useAssets();
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -243,7 +254,7 @@ function PrintReportTab() {
   const { toast } = useToast();
 
   const handleGenerate = () => {
-    let results = [...mockAssets];
+    let results = [...assets];
 
     if (dateFrom) results = results.filter(a => a.purchaseDate >= dateFrom);
     if (dateTo) results = results.filter(a => a.purchaseDate <= dateTo);
@@ -316,7 +327,7 @@ function PrintReportTab() {
                 <SelectContent>
                   <SelectItem value="all">Semua Kategori</SelectItem>
                   <SelectItem value="Hardware">Hardware</SelectItem>
-                  <SelectItem value="Software">Software</SelectItem>
+                  <SelectItem value="Consumables">Consumables</SelectItem>
                   <SelectItem value="Peripherals">Peripherals</SelectItem>
                 </SelectContent>
               </Select>
@@ -414,7 +425,42 @@ function PrintReportTab() {
 // ─── Main Page ──────────────────────────────────────────────────────────────────
 
 export function AssetManagementPage() {
-  const [allAssets, setAllAssets] = useState<Asset[]>(mockAssets);
+  const { assets: allAssets, loading, error, refetch, updateAsset, createAsset, deleteAsset } = useAssets({}, true);
+
+  const handleAddAsset = async (asset: Asset, locationId?: number) => {
+    const assetData = {
+      ...asset,
+      asset_code: asset.asset_code || `${asset.category?.substring(0, 3).toUpperCase()}-${Date.now()}`,
+    };
+    await createAsset(assetData as Omit<Asset, 'id'> & { asset_code: string }, locationId);
+    refetch();
+  };
+
+  const handleEditAsset = async (updatedAsset: Asset, locationId?: number) => {
+    await updateAsset(updatedAsset.id, updatedAsset, locationId);
+    refetch();
+  };
+
+  const handleDeleteAsset = async (assetId: string) => {
+    await deleteAsset(assetId);
+    refetch();
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-gray-600">Loading assets...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg text-red-600">Error: {error}</div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -445,13 +491,14 @@ export function AssetManagementPage() {
           <TabsContent value="data-aset" className="mt-4">
             <AssetTable
               assets={allAssets}
-              onAssetsChange={(asset) => setAllAssets([asset, ...allAssets])}
-              onEditAsset={(updated) => setAllAssets(updated)}
+              onAssetsChange={handleAddAsset}
+              onEditAsset={handleEditAsset}
+              onDeleteAsset={handleDeleteAsset}
             />
           </TabsContent>
 
           <TabsContent value="jenis-aset" className="mt-4">
-            <AssetTypesTab />
+            <AssetTypesTab assets={allAssets} />
           </TabsContent>
 
           <TabsContent value="cetak-laporan" className="mt-4">

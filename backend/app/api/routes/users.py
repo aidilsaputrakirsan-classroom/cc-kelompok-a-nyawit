@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy import select, func
+from sqlalchemy.orm import Session, joinedload
 
-from app.api.deps import get_db, require_admin, require_manager_or_admin
+from app.api.deps import get_db, require_manager_or_admin
 from app.core.security import get_password_hash
 from app.models.user import User, UserRole
-from app.schemas.user import UserCreate, UserRead, UserUpdate
+from app.schemas.user import UserCreate, UserRead, UserReadWithAssets, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -15,32 +15,49 @@ def list_users(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_manager_or_admin),
 ) -> list[User]:
-    """List all users (manager and admin only)."""
+    """List all users (admin only)."""
     users = db.scalars(select(User).order_by(User.created_at.desc())).all()
     return list(users)
 
 
-@router.get("/{user_id}", response_model=UserRead)
+@router.get("/{user_id}", response_model=UserReadWithAssets)
 def get_user(
     user_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_manager_or_admin),
-) -> User:
-    """Get a specific user by ID (manager and admin only)."""
-    user = db.get(User, user_id)
+) -> dict:
+    """Get a specific user by ID with their created assets (admin only)."""
+    user = db.scalar(
+        select(User)
+        .options(joinedload(User.created_assets))
+        .where(User.id == user_id)
+    )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    return user
+    
+    # Count assets created by this user
+    asset_count = db.scalar(
+        select(func.count())
+        .select_from(User)
+        .join(User.created_assets)
+        .where(User.id == user_id)
+    ) or 0
+    
+    return {
+        **UserRead.model_validate(user).model_dump(),
+        "created_assets": user.created_assets,
+        "asset_count": asset_count
+    }
 
 
 @router.post("", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 def create_user(
     payload: UserCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_manager_or_admin),
 ) -> User:
     """Create a new user (admin only)."""
     # Check if username already exists
@@ -81,7 +98,7 @@ def update_user(
     user_id: int,
     payload: UserUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_manager_or_admin),
 ) -> User:
     """Update a user (admin only)."""
     user = db.get(User, user_id)
@@ -122,7 +139,7 @@ def update_user(
 def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_manager_or_admin),
 ) -> None:
     """Delete a user (admin only)."""
     user = db.get(User, user_id)

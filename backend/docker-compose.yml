@@ -6,7 +6,11 @@ services:
     container_name: it_asset_api
     restart: unless-stopped
     environment:
+<<<<<<< HEAD
       DATABASE_URL: sqlite:///.backend/it_asset.db
+=======
+      DATABASE_URL: sqlite:////data/it_asset.db
+>>>>>>> ff544d2faa163bbeac3612ad527cd6e7a82de964
       APP_ENV: development
       SECRET_KEY: your-super-secret-key-change-in-production
       ALGORITHM: HS256

@@ -11,8 +11,12 @@ import { AssetManagementPage } from '@/pages/AssetManagementPage';
 import { LocationManagementPage } from '@/pages/LocationManagementPage';
 import { ConditionManagementPage } from '@/pages/ConditionManagementPage';
 import { UserManagementPage } from '@/pages/UserManagementPage';
+<<<<<<< HEAD
 import { TransaksiPage } from '@/pages/TransaksiPage';
 import { ConsumablesPage } from '@/pages/ConsumablesPage';
+=======
+import { TransactionManagementPage } from '@/pages/TransactionManagementPage';
+>>>>>>> ff544d2faa163bbeac3612ad527cd6e7a82de964
 import { LayoutDashboard } from 'lucide-react';
 import { AuthService } from '@/lib/auth';
 
@@ -45,11 +49,16 @@ function App() {
         return <ConditionManagementPage />;
       case 'user-management':
         return <UserManagementPage />;
+<<<<<<< HEAD
       case 'transaksi':
         return <TransaksiPage />;
       case 'consumables':
         return <ConsumablesPage />;
 
+=======
+      case 'transaction-management':
+        return <TransactionManagementPage />;
+>>>>>>> ff544d2faa163bbeac3612ad527cd6e7a82de964
       default:
         return <DashboardPage />;
     }

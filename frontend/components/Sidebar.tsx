@@ -11,7 +11,7 @@ interface SidebarProps {
 const categories = [
   { id: 'All', label: 'All Assets', icon: Package },
   { id: 'Hardware', label: 'Hardware', icon: Laptop },
-  { id: 'Software', label: 'Software', icon: FileCode },
+  { id: 'Consumables', label: 'Consumables', icon: FileCode },
   { id: 'Peripherals', label: 'Peripherals', icon: Cable }
 ];
 
