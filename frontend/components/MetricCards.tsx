@@ -1,12 +1,13 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Package, CheckCircle, Wrench } from 'lucide-react';
+import { Package, CheckCircle, Wrench, ArrowRightLeft } from 'lucide-react';
 import type { Asset } from '@/data/mockAssets';
 
 interface MetricCardsProps {
   assets: Asset[];
+  transactionCount?: number;
 }
 
-export function MetricCards({ assets }: MetricCardsProps) {
+export function MetricCards({ assets, transactionCount = 0 }: MetricCardsProps) {
   const totalAssets = assets.length;
   const assetsInUse = assets.filter(asset => asset.status === 'In Use').length;
   const assetsUnderMaintenance = assets.filter(asset => asset.status === 'Under Maintenance').length;
@@ -32,11 +33,18 @@ export function MetricCards({ assets }: MetricCardsProps) {
       icon: Wrench,
       color: '#F59E0B',
       bgColor: '#FEF3C7'
+    },
+    {
+      title: 'Transaksi Bulan Ini',
+      value: transactionCount,
+      icon: ArrowRightLeft,
+      color: '#7C3AED',
+      bgColor: '#F5F3FF'
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
       {metrics.map((metric) => {
         const Icon = metric.icon;
         return (
@@ -58,3 +66,4 @@ export function MetricCards({ assets }: MetricCardsProps) {
     </div>
   );
 }
+

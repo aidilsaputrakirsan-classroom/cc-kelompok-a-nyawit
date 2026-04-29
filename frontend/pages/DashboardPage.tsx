@@ -1,17 +1,41 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { MetricCards } from '@/components/MetricCards';
 import { StatusPieChart } from '@/components/StatusPieChart';
 import { TypeBarChart } from '@/components/TypeBarChart';
 import { AssetTable } from '@/components/AssetTable';
 import { CategoryTabs } from '@/components/CategoryTabs';
+import { RecentTransactions } from '@/components/RecentTransactions';
 import { Toaster } from '@/components/ui/toaster';
 import { useAssets } from '@/hooks/useAssets';
+import { TransactionAPI } from '@/lib/api';
 import type { Asset, AssetCategory } from '@/data/mockAssets';
+import type { Transaction } from '@/lib/api';
 
 export function DashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<AssetCategory | 'All'>('All');
   const { assets, loading, error, createAsset, updateAsset, deleteAsset } = useAssets({}, true);
+  const [monthlyTxCount, setMonthlyTxCount] = useState(0);
+
+  // Fetch transaction count for current month
+  useEffect(() => {
+    async function fetchTransactionCount() {
+      try {
+        const transactions: Transaction[] = await TransactionAPI.getAll();
+        const now = new Date();
+        const thisMonth = now.getMonth();
+        const thisYear = now.getFullYear();
+        const count = transactions.filter((tx) => {
+          const txDate = new Date(tx.created_at);
+          return txDate.getMonth() === thisMonth && txDate.getFullYear() === thisYear;
+        }).length;
+        setMonthlyTxCount(count);
+      } catch {
+        // Silently fail — metric will show 0
+      }
+    }
+    fetchTransactionCount();
+  }, []);
 
   const filteredAssets = useMemo(() => {
     if (selectedCategory === 'All') {
@@ -84,7 +108,7 @@ export function DashboardPage() {
             <CardTitle className="text-gray-900">Overview</CardTitle>
           </CardHeader>
           <div className="px-6 pb-6">
-            <MetricCards assets={filteredAssets} />
+            <MetricCards assets={filteredAssets} transactionCount={monthlyTxCount} />
           </div>
         </Card>
 
@@ -92,6 +116,9 @@ export function DashboardPage() {
           <StatusPieChart assets={filteredAssets} />
           <TypeBarChart assets={filteredAssets} />
         </div>
+
+        {/* Recent Transactions */}
+        <RecentTransactions />
 
         <AssetTable 
           assets={filteredAssets} 
@@ -104,3 +131,4 @@ export function DashboardPage() {
     </>
   );
 }
+
