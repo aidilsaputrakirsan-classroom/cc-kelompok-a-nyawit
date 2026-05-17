@@ -1,5 +1,11 @@
 # IT Asset Management System (Sistem Manajemen Aset IT)
 
+[![CI Pipeline](https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit/actions/workflows/ci.yml/badge.svg)](https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit/branch/main/graph/badge.svg)](https://codecov.io/gh/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit)
+![Python](https://img.shields.io/badge/python-3.12-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-backend-green)
+![Docker](https://img.shields.io/badge/docker-ready-blue)
+
 ## Tim Pengembang
 
 | Nama | NIM | Peran |

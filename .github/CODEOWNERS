@@ -1,0 +1,17 @@
+# CODEOWNERS
+# Format: <pattern> <owner1> <owner2> ...
+# Dokumentasi: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner untuk semua file
+* @aidilsaputrakirsan-classroom
+
+# Backend — Lead: Ilham Ahmad Fahriji
+/backend/ @aidilsaputrakirsan-classroom
+
+# Frontend — Lead: Putu Ngurah Semara
+/frontend/ @aidilsaputrakirsan-classroom
+
+# DevOps / Infrastructure
+/Dockerfile @aidilsaputrakirsan-classroom
+/docker-compose.yml @aidilsaputrakirsan-classroom
+/.github/ @aidilsaputrakirsan-classroom
