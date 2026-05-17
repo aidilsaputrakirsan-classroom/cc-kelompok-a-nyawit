@@ -5,7 +5,6 @@ import { LoginPage } from '@/pages/LoginPage';
 import { LeftNavigation, PageType } from '@/components/LeftNavigation';
 import { MobileNavigation } from '@/components/MobileNavigation';
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
-import { GlobalSearch } from '@/components/GlobalSearch';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { AssetManagementPage } from '@/pages/AssetManagementPage';
 import { LocationManagementPage } from '@/pages/LocationManagementPage';
@@ -72,9 +71,7 @@ function App() {
                 <h1 className="text-sm font-bold whitespace-nowrap" style={{ color: '#111827' }}>Asset Manager</h1>
               </div>
 
-              <div className="hidden md:block flex-1 min-w-0">
-                <GlobalSearch />
-              </div>
+
             </div>
 
             <UserProfileDropdown onLogout={handleLogout} />
@@ -82,9 +79,7 @@ function App() {
         </header>
 
         <main className="p-3 md:p-6" style={{ paddingTop: '85px' }}>
-          <div className="md:hidden mb-4">
-            <GlobalSearch />
-          </div>
+
           {renderPage()}
         </main>
       </div>
