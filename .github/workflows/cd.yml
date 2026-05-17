@@ -1,0 +1,56 @@
+name: CD Pipeline
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "Dockerfile"
+      - "docker-compose.yml"
+      - ".github/workflows/cd.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: cd-main
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy via SSH
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Start SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p "${{ secrets.SSH_PORT || '22' }}" -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy application
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+        run: |
+          ssh -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "GHCR_USERNAME='$GHCR_USERNAME' GHCR_TOKEN='$GHCR_TOKEN' DEPLOY_PATH='$DEPLOY_PATH' bash -s" <<'EOF'
+          set -e
+          cd "$DEPLOY_PATH"
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
+          docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+          EOF

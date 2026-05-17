@@ -1,0 +1,6 @@
+version: '3.8'
+
+services:
+  app:
+    image: ghcr.io/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit:latest
+    pull_policy: always

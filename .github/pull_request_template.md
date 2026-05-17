@@ -1,4 +1,4 @@
-## Deskripsi Perubahan
+# Deskripsi Perubahan
 <!-- Jelaskan secara singkat apa yang diubah dan mengapa -->
 
 ## Jenis Perubahan
@@ -17,6 +17,8 @@
 - [ ] Perubahan saya tidak menghasilkan error atau warning baru
 - [ ] Saya telah menambahkan test untuk fitur/fix yang baru (jika ada)
 - [ ] Test yang ada sebelumnya masih lulus dengan perubahan ini
+- [ ] Workflow CI/CD terdampak telah diperbarui atau diverifikasi bila perlu
+- [ ] Jika deployment berubah, secret dan file compose terkait sudah disesuaikan
 
 ## Referensi Issue
 <!-- Jika ada issue yang berkaitan, tuliskan di sini -->
