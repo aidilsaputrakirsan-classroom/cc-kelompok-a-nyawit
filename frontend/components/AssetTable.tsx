@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Search, ChevronUp, ChevronDown, Plus, Pencil, Check, X } from 'lucide-react';
 import { AssetDialog } from '@/components/AssetDialog';
 import { useToast } from '@/hooks/use-toast';
-import { LocationAPI, Location } from '@/lib/api';
+import { LocationAPI, AssetTypeAPI, type AssetTypeData, Location } from '@/lib/api';
 import type { Asset, AssetStatus, AssetCondition, AssetCategory } from '@/data/mockAssets';
 
 interface AssetTableProps {
@@ -37,15 +37,12 @@ const CONDITION_STYLES: Record<AssetCondition, { bg: string; text: string }> = {
 
 const statuses: AssetStatus[] = ['In Use', 'Available', 'Under Maintenance', 'Retired'];
 const conditions: AssetCondition[] = ['Excellent', 'Good', 'Fair', 'Poor'];
-const ASSET_TYPES_BY_CATEGORY: Record<AssetCategory, string[]> = {
-  Hardware: ['Thin Client', 'Laptop', 'Desktop', 'Server', 'Tablet', 'Smartphone'],
-  Consumables: ['Toner Printer', 'Tinta Printer', 'Kertas A4', 'Kabel LAN', 'Patch Cord', 'Baterai UPS'],
-  Peripherals: ['Monitor', 'Keyboard', 'Mouse', 'Printer', 'Webcam', 'Headset', 'Docking Station'],
-};
+
 
 export function AssetTable({ assets, onAssetsChange, onEditAsset, onDeleteAsset }: AssetTableProps) {
   const [localAssets, setLocalAssets] = useState(assets);
   const [locations, setLocations] = useState<Location[]>([]);
+  const [allAssetTypes, setAllAssetTypes] = useState<AssetTypeData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -62,21 +59,25 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset, onDeleteAsset 
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchLocations = async () => {
+    const fetchData = async () => {
       try {
-        const data = await LocationAPI.getAll();
-        setLocations(data);
+        const [locationData, typeData] = await Promise.all([
+          LocationAPI.getAll(),
+          AssetTypeAPI.getAll(),
+        ]);
+        setLocations(locationData);
+        setAllAssetTypes(typeData);
       } catch (err) {
-        console.error('Failed to fetch locations:', err);
+        console.error('Failed to fetch data:', err);
       }
     };
-    fetchLocations();
+    fetchData();
   }, []);
 
   const currentAssets = onAssetsChange ? assets : localAssets;
 
-  const availableLocations = Array.from(new Set(currentAssets.map(a => a.location))).sort();
-  const availableTypes = Array.from(new Set(currentAssets.map(a => a.type))).sort();
+  const availableLocations = Array.from(new Set(currentAssets.map(a => a.location).filter(Boolean))).sort();
+  const availableTypes = Array.from(new Set(currentAssets.map(a => a.type).filter(Boolean))).sort();
 
   const filteredAssets = currentAssets.filter(asset => {
     const matchesSearch = 
@@ -229,7 +230,7 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset, onDeleteAsset 
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
-                  {availableTypes.map(type => (
+                  {availableTypes.filter(t => !!t).map(type => (
                     <SelectItem key={type} value={type}>{type}</SelectItem>
                   ))}
                 </SelectContent>
@@ -259,7 +260,7 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset, onDeleteAsset 
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Locations</SelectItem>
-                  {availableLocations.map(location => (
+                  {availableLocations.filter(l => !!l).map(location => (
                     <SelectItem key={location} value={location}>{location}</SelectItem>
                   ))}
                 </SelectContent>
@@ -314,6 +315,22 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset, onDeleteAsset 
                         className="flex items-center gap-1 font-medium hover:text-foreground whitespace-nowrap"
                       >
                         Status <SortIcon field="status" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[100px]">
+                      <button
+                        type="button"
+                        className="flex items-center gap-1 font-medium hover:text-foreground whitespace-nowrap cursor-default"
+                      >
+                        Jumlah
+                      </button>
+                    </TableHead>
+                    <TableHead className="w-[120px]">
+                      <button
+                        type="button"
+                        className="flex items-center gap-1 font-medium hover:text-foreground whitespace-nowrap cursor-default"
+                      >
+                        SN
                       </button>
                     </TableHead>
                     <TableHead className="w-[140px]">
@@ -384,9 +401,11 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset, onDeleteAsset 
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {(ASSET_TYPES_BY_CATEGORY[rowData.category] || []).map((type) => (
-                                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                                  ))}
+                                  {allAssetTypes
+                                    .filter(t => t.category === (rowData.category || 'Hardware'))
+                                    .map((t) => (
+                                      <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>
+                                    ))}
                                 </SelectContent>
                               </Select>
                             ) : (
@@ -395,19 +414,9 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset, onDeleteAsset 
                           </TableCell>
                           <TableCell>
                             {isEditing ? (
-                              <Select
-                                value={rowData.location}
-                                onValueChange={(value) => setEditFormData({ ...rowData, location: value })}
-                              >
-                                <SelectTrigger className="h-8">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {locations.map((loc) => (
-                                    <SelectItem key={loc.id} value={loc.name}>{loc.name}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <div className="truncate max-w-[150px] text-xs px-2 py-1 rounded" title={`${asset.location} (Ubah via Transaksi)`} style={{ backgroundColor: '#F3F4F6', color: '#6B7280' }}>
+                                {asset.location}
+                              </div>
                             ) : (
                               <div className="truncate max-w-[150px]" title={asset.location}>
                                 {asset.location}
@@ -439,6 +448,31 @@ export function AssetTable({ assets, onAssetsChange, onEditAsset, onDeleteAsset 
                               >
                                 {asset.status}
                               </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {isEditing ? (
+                              <Input
+                                type="number"
+                                min="1"
+                                value={rowData.quantity}
+                                onChange={(e) => setEditFormData({ ...rowData, quantity: parseInt(e.target.value) || 1 })}
+                                className="h-8 w-20 mx-auto"
+                              />
+                            ) : (
+                              <span className="font-semibold">{asset.quantity ?? 1}</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {isEditing ? (
+                              <Input
+                                value={rowData.serial_number || ''}
+                                onChange={(e) => setEditFormData({ ...rowData, serial_number: e.target.value })}
+                                className="h-8"
+                                placeholder="SN"
+                              />
+                            ) : (
+                              <span className="text-xs text-muted-foreground whitespace-nowrap">{asset.serial_number || '-'}</span>
                             )}
                           </TableCell>
                           <TableCell>

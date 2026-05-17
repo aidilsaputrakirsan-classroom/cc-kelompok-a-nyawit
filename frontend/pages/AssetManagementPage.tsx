@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,36 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import type { Asset } from '@/data/mockAssets';
 
-// ─── Asset Types Tab ───────────────────────────────────────────────────────────
-
-interface AssetType {
-  id: number;
-  category: string;
-  name: string;
-}
-
-const initialAssetTypes: AssetType[] = [
-  { id: 1, category: 'Hardware', name: 'Thin Client' },
-  { id: 2, category: 'Hardware', name: 'Laptop' },
-  { id: 3, category: 'Hardware', name: 'Desktop' },
-  { id: 4, category: 'Hardware', name: 'Server' },
-  { id: 5, category: 'Hardware', name: 'Tablet' },
-  { id: 6, category: 'Hardware', name: 'Smartphone' },
-  { id: 7, category: 'Hardware', name: 'Printer' },
-  { id: 8, category: 'Hardware', name: 'Monitor' },
-  { id: 9, category: 'Consumables', name: 'Toner Printer' },
-  { id: 10, category: 'Consumables', name: 'Tinta Printer' },
-  { id: 11, category: 'Consumables', name: 'Kertas A4' },
-  { id: 12, category: 'Consumables', name: 'Kabel LAN' },
-  { id: 13, category: 'Consumables', name: 'Patch Cord' },
-  { id: 14, category: 'Consumables', name: 'Baterai UPS' },
-  { id: 15, category: 'Peripherals', name: 'Keyboard' },
-  { id: 16, category: 'Peripherals', name: 'Mouse' },
-  { id: 17, category: 'Peripherals', name: 'Webcam' },
-  { id: 18, category: 'Peripherals', name: 'Headset' },
-  { id: 19, category: 'Peripherals', name: 'Docking Station' },
-  { id: 20, category: 'Peripherals', name: 'USB Hub' },
-];
+import { AssetTypeAPI, type AssetTypeData } from '@/lib/api';
 
 const CATEGORY_STYLES: Record<string, { color: string; bg: string }> = {
   Hardware: { color: '#2563EB', bg: '#EFF6FF' },
@@ -52,25 +23,41 @@ const CATEGORY_STYLES: Record<string, { color: string; bg: string }> = {
 };
 
 function AssetTypesTab({ assets }: { assets: Asset[] }) {
-  const [assetTypes, setAssetTypes] = useState<AssetType[]>(initialAssetTypes);
+  const [assetTypes, setAssetTypes] = useState<AssetTypeData[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedType, setSelectedType] = useState<AssetType | null>(null);
+  const [selectedType, setSelectedType] = useState<AssetTypeData | null>(null);
   const [formData, setFormData] = useState({ name: '', category: 'Hardware' });
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
-  const enrichedAssetTypes = useMemo(
+  const fetchTypes = async () => {
+    try {
+      setLoading(true);
+      const data = await AssetTypeAPI.getAll();
+      setAssetTypes(data);
+    } catch (err) {
+      toast({ title: 'Gagal memuat data', description: String(err), variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchTypes(); }, []);
+
+  const enriched = useMemo(
     () => assetTypes.map((type) => ({
       ...type,
-      assetCount: assets.filter((asset) => asset.category === type.category && asset.type === type.name).length,
+      assetCount: assets.filter((a) => a.type === type.name).length,
     })),
     [assetTypes, assets],
   );
 
-  const filtered = enrichedAssetTypes.filter(t => {
+  const filtered = enriched.filter(t => {
     const matchSearch = t.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchCat = categoryFilter === 'all' || t.category === categoryFilter;
     return matchSearch && matchCat;
@@ -82,30 +69,43 @@ function AssetTypesTab({ assets }: { assets: Asset[] }) {
     setDialogOpen(true);
   };
 
-  const openEdit = (type: AssetType) => {
+  const openEdit = (type: AssetTypeData) => {
     setSelectedType(type);
     setFormData({ name: type.name, category: type.category });
     setIsEditing(true);
     setDialogOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name.trim()) return;
-    if (isEditing && selectedType) {
-      setAssetTypes(assetTypes.map(t => t.id === selectedType.id ? { ...t, name: formData.name, category: formData.category } : t));
-      toast({ title: 'Jenis aset diperbarui', description: `${formData.name} berhasil diperbarui.` });
-    } else {
-      setAssetTypes([...assetTypes, { id: Date.now(), ...formData }]);
-      toast({ title: 'Jenis aset ditambahkan', description: `${formData.name} berhasil ditambahkan.` });
+    setSaving(true);
+    try {
+      if (isEditing && selectedType) {
+        await AssetTypeAPI.update(selectedType.id, formData);
+        toast({ title: 'Jenis aset diperbarui', description: `${formData.name} berhasil diperbarui.` });
+      } else {
+        await AssetTypeAPI.create(formData);
+        toast({ title: 'Jenis aset ditambahkan', description: `${formData.name} berhasil ditambahkan.` });
+      }
+      setDialogOpen(false);
+      await fetchTypes();
+    } catch (err) {
+      toast({ title: 'Gagal menyimpan', description: String(err), variant: 'destructive' });
+    } finally {
+      setSaving(false);
     }
-    setDialogOpen(false);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     const type = assetTypes.find(t => t.id === id);
-    setAssetTypes(assetTypes.filter(t => t.id !== id));
-    setDeleteConfirmId(null);
-    toast({ title: 'Jenis aset dihapus', description: `${type?.name} berhasil dihapus.` });
+    try {
+      await AssetTypeAPI.delete(id);
+      setDeleteConfirmId(null);
+      toast({ title: 'Jenis aset dihapus', description: `${type?.name} berhasil dihapus.` });
+      await fetchTypes();
+    } catch (err) {
+      toast({ title: 'Gagal menghapus', description: String(err), variant: 'destructive' });
+    }
   };
 
   return (
@@ -153,7 +153,13 @@ function AssetTypesTab({ assets }: { assets: Asset[] }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.length === 0 ? (
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={4} className="text-center py-8" style={{ color: '#6B7280' }}>
+                      Memuat data...
+                    </TableCell>
+                  </TableRow>
+                ) : filtered.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center py-8" style={{ color: '#6B7280' }}>
                       Tidak ada jenis aset ditemukan
@@ -218,8 +224,8 @@ function AssetTypesTab({ assets }: { assets: Asset[] }) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Batal</Button>
-            <Button onClick={handleSave} disabled={!formData.name.trim()} style={{ backgroundColor: '#2563EB', color: '#FFFFFF' }}>
-              {isEditing ? 'Simpan' : 'Tambahkan'}
+            <Button onClick={handleSave} disabled={!formData.name.trim() || saving} style={{ backgroundColor: '#2563EB', color: '#FFFFFF' }}>
+              {saving ? 'Menyimpan...' : isEditing ? 'Simpan' : 'Tambahkan'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -381,10 +387,11 @@ function PrintReportTab() {
                         <TableHead>Nama</TableHead>
                         <TableHead>Jenis</TableHead>
                         <TableHead>Status</TableHead>
+                        <TableHead>Jumlah</TableHead>
+                        <TableHead>SN</TableHead>
                         <TableHead>Lokasi</TableHead>
                         <TableHead>Ditugaskan</TableHead>
                         <TableHead>Tgl. Beli</TableHead>
-                        <TableHead>Nilai</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -401,6 +408,8 @@ function PrintReportTab() {
                               {asset.status}
                             </span>
                           </TableCell>
+                          <TableCell className="text-center font-medium">{asset.quantity ?? 1}</TableCell>
+                          <TableCell className="text-xs text-gray-500">{asset.serial_number || '-'}</TableCell>
                           <TableCell className="text-sm">{asset.location}</TableCell>
                           <TableCell className="text-sm">{asset.assignedTo}</TableCell>
                           <TableCell className="text-sm">{asset.purchaseDate}</TableCell>

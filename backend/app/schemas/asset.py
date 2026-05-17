@@ -13,6 +13,7 @@ class AssetBase(BaseModel):
     location: str | None = None
     location_id: int | None = None
     status: AssetStatus = AssetStatus.AVAILABLE
+    quantity: int = 1
     assigned_to: str | None = None
     purchase_date: date | None = None
     last_update: date | None = None
@@ -37,6 +38,7 @@ class AssetUpdate(BaseModel):
     location: str | None = None
     location_id: int | None = None
     status: AssetStatus | None = None
+    quantity: int | None = None
     assigned_to: str | None = None
     purchase_date: date | None = None
     last_update: date | None = None

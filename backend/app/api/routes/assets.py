@@ -88,6 +88,7 @@ def list_assets(
                 "location": asset.location,
                 "location_id": asset.location_id,
                 "status": asset.status.value if hasattr(asset.status, 'value') else asset.status,
+                "quantity": asset.quantity,
                 "assigned_to": asset.assigned_to,
                 "purchase_date": asset.purchase_date,
                 "last_update": asset.last_update,

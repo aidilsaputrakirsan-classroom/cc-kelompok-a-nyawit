@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { LocationAPI, Location } from '@/lib/api';
+import { LocationAPI, AssetTypeAPI, type AssetTypeData, Location } from '@/lib/api';
 import type { Asset, AssetStatus, AssetCondition, AssetCategory } from '@/data/mockAssets';
 
 interface AssetDialogProps {
@@ -17,14 +17,10 @@ interface AssetDialogProps {
 const statuses: AssetStatus[] = ['In Use', 'Available', 'Under Maintenance', 'Retired'];
 const conditions: AssetCondition[] = ['Excellent', 'Good', 'Fair', 'Poor'];
 const categories: AssetCategory[] = ['Hardware', 'Consumables', 'Peripherals'];
-const assetTypes: Record<AssetCategory, string[]> = {
-  Hardware: ['Thin Client', 'Laptop', 'Desktop', 'Server', 'Tablet', 'Smartphone'],
-  Consumables: ['Toner Printer', 'Tinta Printer', 'Kertas A4', 'Kabel LAN', 'Patch Cord', 'Baterai UPS'],
-  Peripherals: ['Monitor', 'Keyboard', 'Mouse', 'Printer', 'Webcam', 'Headset', 'Docking Station']
-};
 
 export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogProps) {
   const [locations, setLocations] = useState<Location[]>([]);
+  const [allAssetTypes, setAllAssetTypes] = useState<AssetTypeData[]>([]);
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const [formData, setFormData] = useState<Partial<Asset>>({
     name: '',
@@ -34,25 +30,31 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
     status: 'Available',
     assignedTo: 'Unassigned',
     condition: 'Good',
+    quantity: 1,
+    serial_number: '',
     purchaseDate: new Date().toISOString().split('T')[0],
     lastUpdate: new Date().toISOString().split('T')[0]
   });
 
-  // Fetch locations from database when dialog opens
+  // Fetch locations and asset types from database when dialog opens
   useEffect(() => {
-    const fetchLocations = async () => {
+    const fetchData = async () => {
       if (!open) return;
       setIsLoadingLocations(true);
       try {
-        const data = await LocationAPI.getAll();
-        setLocations(data);
+        const [locationData, typeData] = await Promise.all([
+          LocationAPI.getAll(),
+          AssetTypeAPI.getAll(),
+        ]);
+        setLocations(locationData);
+        setAllAssetTypes(typeData);
       } catch (err) {
-        console.error('Failed to fetch locations:', err);
+        console.error('Failed to fetch data:', err);
       } finally {
         setIsLoadingLocations(false);
       }
     };
-    fetchLocations();
+    fetchData();
   }, [open]);
 
   // Initialize form data when dialog opens or asset changes
@@ -72,6 +74,8 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
         status: 'Available',
         assignedTo: 'Unassigned',
         condition: 'Good',
+        quantity: 1,
+        serial_number: '',
         purchaseDate: new Date().toISOString().split('T')[0],
         lastUpdate: new Date().toISOString().split('T')[0]
       });
@@ -147,9 +151,11 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {assetTypes[formData.category || 'Hardware'].map((type) => (
-                    <SelectItem key={type} value={type}>{type}</SelectItem>
-                  ))}
+                  {allAssetTypes
+                    .filter(t => t.category === (formData.category || 'Hardware'))
+                    .map((t) => (
+                      <SelectItem key={t.id} value={t.name}>{t.name}</SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -159,7 +165,7 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
               <Select
                 value={formData.location}
                 onValueChange={(value) => setFormData({ ...formData, location: value })}
-                disabled={isLoadingLocations || locations.length === 0}
+                disabled={isLoadingLocations || locations.length === 0 || !!asset}
               >
                 <SelectTrigger id="location">
                   <SelectValue placeholder={isLoadingLocations ? "Loading locations..." : locations.length === 0 ? "No locations available" : "Select location"} />
@@ -170,6 +176,11 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
                   ))}
                 </SelectContent>
               </Select>
+              {!!asset && (
+                <p className="text-xs mt-1" style={{ color: '#D97706' }}>
+                  * Lokasi hanya dapat diubah melalui fitur Manajemen Transaksi.
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -224,6 +235,28 @@ export function AssetDialog({ open, onOpenChange, asset, onSave }: AssetDialogPr
                 value={formData.purchaseDate}
                 onChange={(e) => setFormData({ ...formData, purchaseDate: e.target.value })}
                 required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="quantity">Kuantitas (Jumlah)</Label>
+              <Input
+                id="quantity"
+                type="number"
+                min="1"
+                value={formData.quantity}
+                onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="serial_number">Serial Number (SN)</Label>
+              <Input
+                id="serial_number"
+                placeholder="Opsional"
+                value={formData.serial_number || ''}
+                onChange={(e) => setFormData({ ...formData, serial_number: e.target.value })}
               />
             </div>
           </div>

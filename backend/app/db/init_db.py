@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.security import get_password_hash
 from app.db.database import engine
-from app.models import Base, Category, User, UserRole, Location, Asset, AssetStatus, AssetCondition
+from app.models import Base, Category, User, UserRole, Location, Asset, AssetType, AssetStatus, AssetCondition
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -39,6 +39,49 @@ def seed_categories(db: Session) -> None:
     
     db.commit()
     logger.info(f"Seeded {len(categories)} default categories")
+
+
+def seed_asset_types(db: Session) -> None:
+    """Seed initial asset types if none exist."""
+    existing = db.query(AssetType).first()
+    if existing:
+        logger.info("Asset types already exist, skipping seed")
+        return
+
+    logger.info("Seeding default asset types...")
+
+    asset_types = [
+        # Hardware
+        AssetType(name="Thin Client", category="Hardware"),
+        AssetType(name="Laptop", category="Hardware"),
+        AssetType(name="Desktop", category="Hardware"),
+        AssetType(name="Server", category="Hardware"),
+        AssetType(name="Tablet", category="Hardware"),
+        AssetType(name="Smartphone", category="Hardware"),
+        AssetType(name="Printer", category="Hardware"),
+        AssetType(name="Monitor", category="Hardware"),
+        # Consumables
+        AssetType(name="Toner Printer", category="Consumables"),
+        AssetType(name="Tinta Printer", category="Consumables"),
+        AssetType(name="Kertas A4", category="Consumables"),
+        AssetType(name="Kabel LAN", category="Consumables"),
+        AssetType(name="Patch Cord", category="Consumables"),
+        AssetType(name="Baterai UPS", category="Consumables"),
+        # Peripherals
+        AssetType(name="Keyboard", category="Peripherals"),
+        AssetType(name="Mouse", category="Peripherals"),
+        AssetType(name="Webcam", category="Peripherals"),
+        AssetType(name="Headset", category="Peripherals"),
+        AssetType(name="Docking Station", category="Peripherals"),
+        AssetType(name="USB Hub", category="Peripherals"),
+        AssetType(name="IP Phone", category="Peripherals"),
+    ]
+
+    for at in asset_types:
+        db.add(at)
+
+    db.commit()
+    logger.info(f"Seeded {len(asset_types)} default asset types")
 
 
 def seed_admin_user(db: Session) -> None:

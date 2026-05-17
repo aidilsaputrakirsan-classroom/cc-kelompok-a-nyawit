@@ -13,8 +13,8 @@ from sqlalchemy.orm import Session
 
 from app.api.router import api_router
 from app.db.database import SessionLocal
-from app.db.init_db import init_db, seed_admin_user, seed_categories, seed_locations, seed_assets
-from app.models import Asset, BorrowLog, Category, User, Location, Transaction  # noqa: F401 - imported for SQLAlchemy registration
+from app.db.init_db import init_db, seed_admin_user, seed_categories, seed_locations, seed_assets, seed_asset_types
+from app.models import Asset, AssetType, BorrowLog, Category, User, Location, Transaction  # noqa: F401 - imported for SQLAlchemy registration
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -60,6 +60,8 @@ def on_startup() -> None:
             logger.info("Seeding initial data...")
             seed_categories(db)
             logger.info("Categories seeded")
+            seed_asset_types(db)
+            logger.info("Asset types seeded")
             seed_locations(db)
             logger.info("Locations seeded")
             seed_assets(db)

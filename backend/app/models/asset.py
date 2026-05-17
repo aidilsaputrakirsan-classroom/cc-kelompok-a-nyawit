@@ -45,6 +45,7 @@ class Asset(Base):
     # Legacy location field (for backward compatibility)
     location: Mapped[str | None] = mapped_column(default=None)
     status: Mapped[AssetStatus] = mapped_column(default=AssetStatus.AVAILABLE)
+    quantity: Mapped[int] = mapped_column(default=1)
     assigned_to: Mapped[str | None] = mapped_column(default=None)
     purchase_date: Mapped[date | None] = mapped_column(default=None)
     last_update: Mapped[date | None] = mapped_column(default=None)

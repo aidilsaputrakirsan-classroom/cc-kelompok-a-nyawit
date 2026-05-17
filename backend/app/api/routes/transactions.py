@@ -1,5 +1,5 @@
 from datetime import date
-
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -27,16 +27,11 @@ def _apply_transaction_side_effects(
     tx_type = payload.transaction_type
     today = date.today()
 
-    # --- Mutasi: move asset to new location ---
-    if tx_type in (TransactionType.MUTASI_IN, TransactionType.MUTASI_OUT):
-        if payload.to_location_id:
-            to_loc = db.get(Location, payload.to_location_id)
-            if to_loc:
-                asset.location_id = to_loc.id
-                asset.location = to_loc.name
+    qty = payload.quantity
 
-    # --- In: asset is coming in (available at destination) ---
-    elif tx_type == TransactionType.IN:
+    # --- IN / ADJUSTMENT IN: asset is coming in (increase quantity) ---
+    if tx_type in (TransactionType.IN, TransactionType.ADJUSTMENT_IN):
+        asset.quantity += qty
         asset.status = AssetStatus.AVAILABLE
         if payload.to_location_id:
             to_loc = db.get(Location, payload.to_location_id)
@@ -44,22 +39,109 @@ def _apply_transaction_side_effects(
                 asset.location_id = to_loc.id
                 asset.location = to_loc.name
 
-    # --- Out: asset is going out (in use) ---
-    elif tx_type == TransactionType.OUT:
-        asset.status = AssetStatus.IN_USE
-        if payload.to_location_id:
-            to_loc = db.get(Location, payload.to_location_id)
-            if to_loc:
-                asset.location_id = to_loc.id
-                asset.location = to_loc.name
+    # --- OUT / ADJUSTMENT OUT: asset is going out (decrease quantity) ---
+    elif tx_type in (TransactionType.OUT, TransactionType.ADJUSTMENT_OUT):
+        if asset.quantity >= qty:
+            asset.quantity -= qty
+        else:
+            raise HTTPException(status_code=400, detail="Kuantitas tidak mencukupi untuk dikeluarkan")
+        
+        if asset.quantity == 0:
+            asset.status = AssetStatus.RETIRED if tx_type == TransactionType.ADJUSTMENT_OUT else AssetStatus.IN_USE
+            if payload.to_location_id:
+                to_loc = db.get(Location, payload.to_location_id)
+                if to_loc:
+                    asset.location_id = to_loc.id
+                    asset.location = to_loc.name
+        else:
+            # Jika qty masih ada sisa, dan memindahkan OUT ke lokasi baru, split
+            if payload.to_location_id:
+                to_loc = db.get(Location, payload.to_location_id)
+                if to_loc:
+                    existing_sibling = db.scalars(
+                        select(Asset).where(
+                            Asset.name == asset.name,
+                            Asset.category_id == asset.category_id,
+                            Asset.location_id == to_loc.id,
+                            Asset.status == AssetStatus.IN_USE
+                        )
+                    ).first()
 
-    # --- Adjustment In: asset restored / returned to available ---
-    elif tx_type == TransactionType.ADJUSTMENT_IN:
-        asset.status = AssetStatus.AVAILABLE
+                    if existing_sibling:
+                        existing_sibling.quantity += qty
+                    else:
+                        new_code = f"{asset.asset_code}-{uuid.uuid4().hex[:4].upper()}"
+                        new_asset = Asset(
+                            asset_code=new_code,
+                            name=asset.name,
+                            type=asset.type,
+                            category_id=asset.category_id,
+                            location_id=to_loc.id,
+                            location=to_loc.name,
+                            status=AssetStatus.IN_USE,
+                            quantity=qty,
+                            assigned_to=asset.assigned_to,
+                            purchase_date=asset.purchase_date,
+                            condition=asset.condition,
+                            serial_number=asset.serial_number,
+                            brand=asset.brand,
+                            model=asset.model,
+                            ip_address=asset.ip_address,
+                            mac_address=asset.mac_address,
+                            created_by=asset.created_by
+                        )
+                        db.add(new_asset)
 
-    # --- Adjustment Out: asset retired / removed ---
-    elif tx_type == TransactionType.ADJUSTMENT_OUT:
-        asset.status = AssetStatus.RETIRED
+    # --- MUTASI: move asset to new location (split logic) ---
+    elif tx_type in (TransactionType.MUTASI_IN, TransactionType.MUTASI_OUT):
+        if not payload.to_location_id:
+            raise HTTPException(status_code=400, detail="Mutasi memerlukan lokasi tujuan")
+            
+        to_loc = db.get(Location, payload.to_location_id)
+        if not to_loc:
+            raise HTTPException(status_code=400, detail="Lokasi tujuan tidak ditemukan")
+
+        # Jika pindah SEMUA kuantitas
+        if asset.quantity <= qty:
+            asset.location_id = to_loc.id
+            asset.location = to_loc.name
+        else:
+            # Pindah SEBAGIAN kuantitas
+            asset.quantity -= qty
+            
+            # Cek apakah sudah ada aset serupa di lokasi tujuan
+            existing_sibling = db.scalars(
+                select(Asset).where(
+                    Asset.name == asset.name,
+                    Asset.category_id == asset.category_id,
+                    Asset.location_id == to_loc.id
+                )
+            ).first()
+
+            if existing_sibling:
+                existing_sibling.quantity += qty
+            else:
+                new_code = f"{asset.asset_code}-{uuid.uuid4().hex[:4].upper()}"
+                new_asset = Asset(
+                    asset_code=new_code,
+                    name=asset.name,
+                    type=asset.type,
+                    category_id=asset.category_id,
+                    location_id=to_loc.id,
+                    location=to_loc.name,
+                    status=asset.status,
+                    quantity=qty,
+                    assigned_to=asset.assigned_to,
+                    purchase_date=asset.purchase_date,
+                    condition=asset.condition,
+                    serial_number=asset.serial_number,
+                    brand=asset.brand,
+                    model=asset.model,
+                    ip_address=asset.ip_address,
+                    mac_address=asset.mac_address,
+                    created_by=asset.created_by
+                )
+                db.add(new_asset)
 
     # Always update last_update timestamp
     asset.last_update = today

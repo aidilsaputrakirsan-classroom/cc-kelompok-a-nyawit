@@ -309,7 +309,15 @@ export function TransactionManagementPage() {
                     <div className="space-y-4 py-2">
                         <div className="space-y-2">
                             <Label>Aset <span className="text-red-500">*</span></Label>
-                            <Select value={formData.asset_id} onValueChange={v => setFormData({ ...formData, asset_id: v })}>
+                            <Select value={formData.asset_id} onValueChange={v => {
+                                const selectedAsset = assets.find(a => a.id.toString() === v);
+                                const fromLoc = locations.find(l => l.name === selectedAsset?.location);
+                                setFormData({ 
+                                    ...formData, 
+                                    asset_id: v,
+                                    from_location_id: fromLoc ? fromLoc.id.toString() : ''
+                                });
+                            }}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Pilih aset" />
                                 </SelectTrigger>
@@ -339,19 +347,12 @@ export function TransactionManagementPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <Label>Dari Lokasi</Label>
-                                <Select value={formData.from_location_id} onValueChange={v => setFormData({ ...formData, from_location_id: v })}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Pilih lokasi" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {locations.map(location => (
-                                            <SelectItem key={location.id} value={location.id.toString()}>
-                                                {location.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <Label>Dari Lokasi (Otomatis)</Label>
+                                <Input 
+                                    value={locations.find(l => l.id.toString() === formData.from_location_id)?.name || (formData.asset_id ? 'Lokasi tidak diketahui' : '-')}
+                                    disabled
+                                    className="bg-gray-100 text-gray-500"
+                                />
                             </div>
                             <div className="space-y-2">
                                 <Label>Ke Lokasi</Label>

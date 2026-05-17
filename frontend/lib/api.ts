@@ -90,6 +90,8 @@ export interface Asset {
     purchaseDate: string;
     lastUpdate: string;
     condition: AssetCondition;
+    quantity: number;
+    serial_number?: string | null;
 }
 
 // Backend Asset interface
@@ -106,6 +108,7 @@ export interface BackendAsset {
     purchase_date: string | null;
     last_update: string | null;
     condition: string;
+    quantity: number;
     serial_number: string | null;
     brand: string | null;
     model: string | null;
@@ -130,6 +133,7 @@ export interface AssetCreate {
     purchase_date?: string;
     last_update?: string;
     condition?: AssetCondition;
+    quantity?: number;
     serial_number?: string;
     brand?: string;
     model?: string;
@@ -199,6 +203,8 @@ function mapBackendToFrontend(asset: BackendAsset): Asset {
         purchaseDate: asset.purchase_date || asset.created_at.split('T')[0],
         lastUpdate: asset.last_update || asset.updated_at.split('T')[0],
         condition: normalizeCondition(asset.condition),
+        quantity: asset.quantity ?? 1,
+        serial_number: asset.serial_number,
     };
 }
 
@@ -216,6 +222,8 @@ function mapFrontendToCreate(asset: Omit<Asset, 'id'> & { asset_code: string }, 
         purchase_date: asset.purchaseDate,
         last_update: asset.lastUpdate,
         condition: asset.condition,
+        quantity: asset.quantity ?? 1,
+        serial_number: asset.serial_number || undefined,
     };
 }
 
@@ -272,6 +280,8 @@ export const AssetAPI = {
         if (asset.purchaseDate) updateData.purchase_date = asset.purchaseDate;
         if (asset.lastUpdate) updateData.last_update = asset.lastUpdate;
         if (asset.condition) updateData.condition = asset.condition;
+        if (asset.quantity !== undefined) updateData.quantity = asset.quantity;
+        if (asset.serial_number !== undefined) updateData.serial_number = asset.serial_number;
 
         const backendAsset: BackendAsset = await fetchWithAuth(`/assets/${numericId}`, {
             method: 'PUT',
@@ -423,6 +433,41 @@ export const ConditionAPI = {
     getAll: (): Promise<ConditionData[]> => {
         return fetchWithAuth('/conditions');
     }
+};
+
+// Asset Type API
+export interface AssetTypeData {
+    id: number;
+    name: string;
+    category: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export const AssetTypeAPI = {
+    getAll: (): Promise<AssetTypeData[]> => {
+        return fetchWithAuth('/asset-types');
+    },
+
+    create: (data: { name: string; category: string }): Promise<AssetTypeData> => {
+        return fetchWithAuth('/asset-types', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+
+    update: (id: number, data: { name?: string; category?: string }): Promise<AssetTypeData> => {
+        return fetchWithAuth(`/asset-types/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        });
+    },
+
+    delete: (id: number): Promise<void> => {
+        return fetchWithAuth(`/asset-types/${id}`, {
+            method: 'DELETE',
+        });
+    },
 };
 
 // Auth API
