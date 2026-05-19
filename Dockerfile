@@ -37,8 +37,7 @@ COPY backend/requirements-prod.txt requirements.txt
 
 # --mount=type=cache menyimpan cache pip di host (tidak masuk image)
 # --prefix menaruh hasil install ke /install/packages agar mudah di-copy
-RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install --no-cache-dir --prefix=/install/packages -r requirements.txt
+RUN pip install --no-cache-dir --prefix=/install/packages -r requirements.txt
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Stage 3: Runtime (image final)
@@ -79,9 +78,6 @@ COPY backend/nginx.conf /etc/nginx/sites-available/default
 COPY backend/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # ─────────────────────────────────────────────────────────────────────────────
-
-# Volume untuk SQLite database (persisten di luar container)
-VOLUME ["/data"]
 
 # Hanya expose port 80 (port 8000 internal saja, tidak perlu ke host)
 EXPOSE 80
