@@ -9,14 +9,14 @@ on:
     branches: ["main", "master", "develop"]
     paths:
       - "backend/**"
-      - "frontend/**"
+      - "docker-compose.yml"
       - "Dockerfile"
       - "docker-compose.yml"
       - ".github/workflows/ci.yml"
   pull_request:
     branches: ["main", "master", "develop"]
     paths:
-      - "backend/**"
+      - "docker-compose.yml"
       - "frontend/**"
       - "Dockerfile"
       - "docker-compose.yml"
