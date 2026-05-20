@@ -1,6 +1,38 @@
-version: '3.8'
-
 services:
-  app:
-    image: ghcr.io/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit:latest
-    pull_policy: always
+  database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: it_asset_db
+      POSTGRES_USER: it_asset
+      POSTGRES_PASSWORD: it_asset_password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+psycopg://it_asset:it_asset_password@database:5432/it_asset_db
+      SECRET_KEY: ${SECRET_KEY:-your-super-secret-key-change-in-production}
+      APP_ENV: production
+      PORT: 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - database
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      FRONTEND_API_BASE_URL: ${FRONTEND_API_BASE_URL:-http://localhost:8000/api/v1}
+      PORT: 80
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:

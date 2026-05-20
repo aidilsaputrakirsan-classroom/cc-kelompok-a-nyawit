@@ -1,6 +1,8 @@
+import { getApiBaseUrl } from '@/lib/runtime-config';
+
 // API Service for connecting frontend to backend
-// Use relative paths - Vite proxy handles CORS
-export const API_BASE_URL = '/api/v1';
+// Use runtime config in production and fall back to the local proxy in development.
+export const API_BASE_URL = getApiBaseUrl();
 
 // Helper to get auth token from localStorage
 function getAuthToken(): string | null {

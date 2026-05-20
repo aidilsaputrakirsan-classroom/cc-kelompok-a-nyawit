@@ -40,10 +40,10 @@ Sistem ini membantu administrator IT dalam menjaga transparansi distribusi aset,
 | **Process Manager** | Supervisord | Latest |
 
 ### Arsitektur deployment menggunakan Docker dengan pattern berikut:
-- **Multi-stage Build**: Frontend di-build terlebih dahulu, kemudian hasil build-nya di-copy ke container final
-- **Supervisord**: Mengelola proses Nginx dan Uvicorn secara bersamaan dalam satu container
-- **Nginx**: Serve static frontend dan sebagai reverse proxy untuk API backend
-- **SQLite**: Database disimpan di volume untuk persistensi data
+- **Frontend service**: Build React/Vite di image terpisah lalu diserve oleh Nginx
+- **Backend service**: FastAPI berjalan sendiri di container Python terpisah
+- **Database service**: PostgreSQL terpisah untuk deployment Railway dan environment production
+- **Runtime config**: Frontend membaca base URL API dari `config.js` agar bisa diarahkan ke backend Railway
 
 ---
 
@@ -63,7 +63,6 @@ Backend harus berjalan secara terpisah (lihat bagian Backend di bawah).
 
 #### Backend dengan Docker
 ```bash
-cd backend
 docker compose up -d --build
 ```
 
@@ -84,7 +83,7 @@ Backend API: **http://localhost:8000**
 
 ---
 
-### Produksi dengan Docker (Full Stack)
+### Produksi dengan Docker (Tiga Service Terpisah)
 
 #### Prerequisites
 - Docker Desktop terinstall
@@ -96,7 +95,7 @@ Backend API: **http://localhost:8000**
 git clone https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit.git
 cd cc-kelompok-a-nyawit
 
-# Build dan jalankan container
+# Build dan jalankan tiga service terpisah
 docker compose up -d --build
 
 # Cek status container
@@ -111,6 +110,16 @@ docker compose ps
 | API | http://localhost:8000 | Backend API |
 | Swagger UI | http://localhost:8000/docs | Dokumentasi API Interaktif |
 | ReDoc | http://localhost:8000/redoc | Dokumentasi API (ReDoc) |
+
+### Deploy ke Railway
+
+Gunakan tiga service terpisah:
+1. **Frontend**: set root ke folder `frontend/` dan build dari [frontend/Dockerfile](frontend/Dockerfile).
+2. **Backend**: set root ke folder `backend/` dan build dari [backend/Dockerfile](backend/Dockerfile).
+3. **Database**: pakai service PostgreSQL Railway, lalu isi `DATABASE_URL` di backend dengan connection string PostgreSQL dari Railway.
+
+Untuk frontend, set `FRONTEND_API_BASE_URL` ke URL publik backend Railway, misalnya `https://your-backend.up.railway.app/api/v1`.
+Untuk backend, set `DATABASE_URL` ke URL PostgreSQL Railway, misalnya `postgresql+psycopg://...`.
 
 #### Default Users
 Setelah container berjalan, sistem membuat user default:
@@ -138,26 +147,21 @@ docker compose down -v
 
 **Gejala:** Container terus mencoba restart
 
-**Penyebab:** Health check gagal karena path salah
+**Penyebab:** Health check gagal atau service belum selesai start
 
 **Solusi:**
-1. Pastikan menggunakan konfigurasi docker-compose.yml yang sudah diperbarui
-2. Health check menggunakan `/` (root endpoint) bukan `/api/`
-3. Cek logs:
-```bash
-docker compose logs
-```
+1. Pastikan service database sudah siap sebelum backend start.
+2. Cek logs dengan `docker compose logs`.
+3. Untuk frontend, pastikan `FRONTEND_API_BASE_URL` mengarah ke backend yang benar.
 
 ### Masalah: 502 Bad Gateway
 
-**Penyebab:** Nginx tidak bisa menghubungi uvicorn
+**Penyebab:** Frontend tidak bisa mengakses backend.
 
 **Solusi:**
-1. Cek uvicorn berjalan:
-```bash
-docker compose exec app ps aux
-```
-2. Cek port 8000 tidak digunakan aplikasi lain
+1. Cek backend berjalan di port 8000.
+2. Pastikan `FRONTEND_API_BASE_URL` mengarah ke URL backend yang benar.
+3. Saat Railway, pastikan URL backend publik sudah dipakai, bukan `localhost`.
 
 ### Masalah: Database Error
 

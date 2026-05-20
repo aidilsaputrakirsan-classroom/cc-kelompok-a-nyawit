@@ -1,4 +1,5 @@
 import logging
+import time
 
 # Configure detailed logging
 logging.basicConfig(
@@ -47,35 +48,40 @@ def read_root() -> dict[str, str]:
 def on_startup() -> None:
     """Initialize database and seed data on startup."""
     logger.info("Starting up IT Asset Management API...")
-    
-    try:
-        # Create database tables
-        logger.info("Creating database tables...")
-        init_db()
-        logger.info("Database tables created successfully")
-        
-        # Seed initial data
-        db: Session = SessionLocal()
+
+    last_error: Exception | None = None
+    for attempt in range(1, 6):
         try:
-            logger.info("Seeding initial data...")
-            seed_categories(db)
-            logger.info("Categories seeded")
-            seed_asset_types(db)
-            logger.info("Asset types seeded")
-            seed_locations(db)
-            logger.info("Locations seeded")
-            seed_assets(db)
-            logger.info("Assets seeded")
-            seed_admin_user(db)
-            logger.info("Admin user seeded")
-        except Exception as seed_error:
-            logger.error(f"Error during seeding: {seed_error}")
-            db.rollback()
-        finally:
-            db.close()
-        
-        logger.info("Startup complete!")
-    except Exception as e:
-        logger.error(f"Startup error: {e}")
-        logger.warning(f"Database not ready yet, skipping initialization: {e}")
-        logger.info("Application will retry connections during requests")
+            logger.info("Creating database tables (attempt %s/5)...", attempt)
+            init_db()
+            logger.info("Database tables created successfully")
+
+            db: Session = SessionLocal()
+            try:
+                logger.info("Seeding initial data...")
+                seed_categories(db)
+                logger.info("Categories seeded")
+                seed_asset_types(db)
+                logger.info("Asset types seeded")
+                seed_locations(db)
+                logger.info("Locations seeded")
+                seed_assets(db)
+                logger.info("Assets seeded")
+                seed_admin_user(db)
+                logger.info("Admin user seeded")
+            except Exception as seed_error:
+                logger.error(f"Error during seeding: {seed_error}")
+                db.rollback()
+                raise
+            finally:
+                db.close()
+
+            logger.info("Startup complete!")
+            return
+        except Exception as error:
+            last_error = error
+            logger.error(f"Startup error on attempt {attempt}: {error}")
+            if attempt < 5:
+                time.sleep(5)
+
+    raise RuntimeError("Database initialization failed after retries") from last_error

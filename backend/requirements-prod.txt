@@ -3,6 +3,7 @@ fastapi
 uvicorn[standard]
 sqlalchemy[asyncio]
 aiosqlite
+psycopg[binary]
 pydantic-settings
 pydantic[email]
 python-dotenv

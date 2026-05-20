@@ -1,6 +1,5 @@
 // Authentication utility for frontend with backend integration
-
-const API_BASE_URL = '/api/v1';
+import { API_BASE_URL } from '@/lib/api';
 
 export interface User {
   id: number;

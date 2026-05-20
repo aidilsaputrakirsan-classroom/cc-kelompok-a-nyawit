@@ -25,8 +25,14 @@ class Settings(BaseSettings):
 
     @field_validator("database_url")
     @classmethod
-    def normalize_sqlite_path(cls, value: str) -> str:
-        """Normalize relative sqlite paths to backend directory for stable runtime behavior."""
+    def normalize_database_url(cls, value: str) -> str:
+        """Normalize database URLs for local SQLite and Railway PostgreSQL deployments."""
+        if value.startswith("postgres://"):
+            return value.replace("postgres://", "postgresql+psycopg://", 1)
+
+        if value.startswith("postgresql://"):
+            return value.replace("postgresql://", "postgresql+psycopg://", 1)
+
         if value.startswith("sqlite:///./"):
             relative_path = value.removeprefix("sqlite:///./")
             absolute_path = (BASE_DIR / relative_path).resolve()
