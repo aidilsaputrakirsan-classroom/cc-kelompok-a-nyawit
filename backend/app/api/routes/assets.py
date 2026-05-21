@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 import logging
 
-from app.api.deps import get_current_active_user, require_manager_or_admin
+from app.api.deps import get_current_active_user
 from app.db.database import get_db
 from app.models.asset import Asset, AssetStatus
 from app.models.category import Category
@@ -31,7 +31,7 @@ def _validate_relations(db: Session, category_id: int, location_id: int | None =
 def create_asset(
     payload: AssetCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_manager_or_admin),
+    current_user: User = Depends(get_current_active_user),
 ) -> Asset:
     _validate_relations(db, payload.category_id, payload.location_id)
 
@@ -131,7 +131,7 @@ def update_asset(
     asset_id: int,
     payload: AssetUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_manager_or_admin),
+    current_user: User = Depends(get_current_active_user),
 ) -> Asset:
     from sqlalchemy.orm import joinedload
     stmt = select(Asset).options(
@@ -176,7 +176,7 @@ def update_asset(
 def delete_asset(
     asset_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_manager_or_admin),
+    current_user: User = Depends(get_current_active_user),
 ) -> None:
     from sqlalchemy.orm import joinedload
     stmt = select(Asset).options(

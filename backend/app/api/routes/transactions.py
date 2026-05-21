@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_active_user, get_db, require_manager_or_admin
+from app.api.deps import get_current_active_user, get_db
 from app.models.transaction import Transaction, TransactionType
 from app.models.asset import Asset, AssetStatus
 from app.models.location import Location
@@ -151,7 +151,7 @@ def _apply_transaction_side_effects(
 def create_transaction(
     payload: TransactionCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_manager_or_admin),
+    current_user: User = Depends(get_current_active_user),
 ) -> Transaction:
     # Validate asset exists
     asset = db.get(Asset, payload.asset_id)
@@ -208,7 +208,7 @@ def update_transaction(
     transaction_id: int,
     payload: TransactionUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_manager_or_admin),
+    current_user: User = Depends(get_current_active_user),
 ) -> Transaction:
     transaction = db.get(Transaction, transaction_id)
     if not transaction:
@@ -239,7 +239,7 @@ def update_transaction(
 def delete_transaction(
     transaction_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_manager_or_admin),
+    current_user: User = Depends(get_current_active_user),
 ):
     transaction = db.get(Transaction, transaction_id)
     if not transaction:

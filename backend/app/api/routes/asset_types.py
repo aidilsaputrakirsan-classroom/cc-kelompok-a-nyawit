@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_active_user, require_manager_or_admin
+from app.api.deps import get_current_active_user
 from app.db.database import get_db
 from app.models.asset_type import AssetType
 from app.models.user import User
@@ -23,7 +23,7 @@ def list_asset_types(
 def create_asset_type(
     payload: AssetTypeCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_manager_or_admin),
+    current_user: User = Depends(get_current_active_user),
 ) -> AssetType:
     exists = db.scalar(select(AssetType).where(AssetType.name == payload.name))
     if exists:
@@ -41,7 +41,7 @@ def update_asset_type(
     type_id: int,
     payload: AssetTypeUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_manager_or_admin),
+    current_user: User = Depends(get_current_active_user),
 ) -> AssetType:
     asset_type = db.get(AssetType, type_id)
     if not asset_type:
@@ -65,7 +65,7 @@ def update_asset_type(
 def delete_asset_type(
     type_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_manager_or_admin),
+    current_user: User = Depends(get_current_active_user),
 ) -> None:
     asset_type = db.get(AssetType, type_id)
     if not asset_type:

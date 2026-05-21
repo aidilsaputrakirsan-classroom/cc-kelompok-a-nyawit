@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_active_user, require_manager_or_admin
+from app.api.deps import get_current_active_user
 from app.db.database import get_db
 from app.models.category import Category
 from app.models.user import User
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/categories", tags=["Categories"])
 def create_category(
     payload: CategoryCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_manager_or_admin),
+    current_user: User = Depends(get_current_active_user),
 ) -> Category:
     exists = db.scalar(select(Category).where(Category.name == payload.name))
     if exists:
@@ -52,7 +52,7 @@ def update_category(
     category_id: int,
     payload: CategoryUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_manager_or_admin),
+    current_user: User = Depends(get_current_active_user),
 ) -> Category:
     category = db.get(Category, category_id)
     if not category:
@@ -76,7 +76,7 @@ def update_category(
 def delete_category(
     category_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_manager_or_admin),
+    current_user: User = Depends(get_current_active_user),
 ) -> None:
     category = db.get(Category, category_id)
     if not category:
