@@ -12,13 +12,13 @@ RUN bun run build
 
 FROM nginx:1.27-alpine AS runtime
 
-RUN apk add --no-cache gettext curl
+RUN apk add --no-cache gettext curl dos2unix
 
 COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html
 COPY nginx.conf.template /etc/nginx/conf.d/default.conf.template
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 
-RUN chmod +x /docker-entrypoint.sh
+RUN dos2unix /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 
 EXPOSE 80
 

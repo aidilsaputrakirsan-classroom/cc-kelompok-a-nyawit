@@ -1,4 +1,4 @@
-import { Menu, LayoutDashboard, ClipboardList, MapPin, Tag, Users } from 'lucide-react';
+import { Menu, LayoutDashboard, ClipboardList, MapPin, Tag, Users, ArrowRightLeft } from 'lucide-react';
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -7,18 +7,22 @@ import type { PageType } from '@/components/LeftNavigation';
 interface MobileNavigationProps {
   currentPage: PageType;
   onPageChange: (page: PageType) => void;
+  userRole?: string;
 }
 
 const navItems = [
-  { id: 'inventory', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'asset-management', label: 'Manajemen Aset', icon: ClipboardList },
-  { id: 'location-management', label: 'Manajemen Lokasi', icon: MapPin },
-  { id: 'condition-management', label: 'Manajemen Kondisi', icon: Tag },
-  { id: 'user-management', label: 'Manajemen Pengguna', icon: Users },
+  { id: 'inventory', label: 'Dashboard', icon: LayoutDashboard, adminOnly: false },
+  { id: 'asset-management', label: 'Manajemen Aset', icon: ClipboardList, adminOnly: false },
+  { id: 'location-management', label: 'Manajemen Lokasi', icon: MapPin, adminOnly: false },
+  { id: 'condition-management', label: 'Manajemen Kondisi', icon: Tag, adminOnly: false },
+  { id: 'user-management', label: 'Manajemen Pengguna', icon: Users, adminOnly: true },
+  { id: 'transaction-management', label: 'Manajemen Transaksi', icon: ArrowRightLeft, adminOnly: false },
 ];
 
-export function MobileNavigation({ currentPage, onPageChange }: MobileNavigationProps) {
+export function MobileNavigation({ currentPage, onPageChange, userRole }: MobileNavigationProps) {
   const [open, setOpen] = useState(false);
+  const isAdmin = userRole === 'admin';
+  const visibleNavItems = navItems.filter(item => !item.adminOnly || isAdmin);
 
   const handlePageChange = (page: PageType) => {
     onPageChange(page);
@@ -46,7 +50,7 @@ export function MobileNavigation({ currentPage, onPageChange }: MobileNavigation
 
         <div className="p-3">
           <nav className="space-y-0.5">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.id;
 

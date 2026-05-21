@@ -110,6 +110,7 @@ export function UserManagementPage() {
     email: '',
     full_name: '',
     password: '',
+    role: 'user' as 'admin' | 'user',
     is_active: true
   });
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
@@ -159,7 +160,7 @@ export function UserManagementPage() {
   });
 
   const openAdd = () => {
-    setFormData({ username: '', email: '', full_name: '', password: '', is_active: true });
+    setFormData({ username: '', email: '', full_name: '', password: '', role: 'user', is_active: true });
     setDialogMode('add');
   };
 
@@ -170,6 +171,7 @@ export function UserManagementPage() {
       email: user.email,
       full_name: user.full_name || '',
       password: '',
+      role: user.role,
       is_active: user.is_active
     });
     setDialogMode('edit');
@@ -197,7 +199,7 @@ export function UserManagementPage() {
             email: formData.email.trim(),
             full_name: formData.full_name.trim() || null,
             password: formData.password,
-            role: 'admin',
+            role: formData.role,
             is_active: formData.is_active
           })
         });
@@ -206,6 +208,7 @@ export function UserManagementPage() {
         const updateData: Record<string, unknown> = {
           email: formData.email.trim(),
           full_name: formData.full_name.trim() || null,
+          role: formData.role,
           is_active: formData.is_active
         };
         if (formData.password.trim()) {
@@ -297,7 +300,7 @@ export function UserManagementPage() {
               </div>
               <Button size="sm" onClick={openAdd} style={{ backgroundColor: '#2563EB', color: '#FFFFFF' }}>
                 <Plus className="h-4 w-4 mr-2" />
-                Tambah Admin
+                Tambah Pengguna
               </Button>
             </CardTitle>
           </CardHeader>
@@ -397,7 +400,7 @@ export function UserManagementPage() {
       <Dialog open={dialogMode === 'add' || dialogMode === 'edit'} onOpenChange={() => setDialogMode(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{dialogMode === 'add' ? 'Tambah Admin Baru' : 'Edit Pengguna'}</DialogTitle>
+            <DialogTitle>{dialogMode === 'add' ? 'Tambah Pengguna Baru' : 'Edit Pengguna'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-2">
@@ -442,6 +445,61 @@ export function UserManagementPage() {
                 onChange={e => setFormData({ ...formData, password: e.target.value })}
               />
             </div>
+
+            {/* Role Selector */}
+            <div className="space-y-2">
+              <Label>Role <span style={{ color: '#EF4444' }}>*</span></Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  id="usr-role-user"
+                  onClick={() => setFormData({ ...formData, role: 'user' })}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all"
+                  style={formData.role === 'user' ? {
+                    borderColor: '#2563EB',
+                    backgroundColor: '#EFF6FF',
+                    color: '#2563EB'
+                  } : {
+                    borderColor: '#E5E7EB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#6B7280'
+                  }}
+                >
+                  <span
+                    className="h-3 w-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: formData.role === 'user' ? '#2563EB' : '#D1D5DB' }}
+                  />
+                  User
+                </button>
+                <button
+                  type="button"
+                  id="usr-role-admin"
+                  onClick={() => setFormData({ ...formData, role: 'admin' })}
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-all"
+                  style={formData.role === 'admin' ? {
+                    borderColor: '#7C3AED',
+                    backgroundColor: '#EDE9FE',
+                    color: '#7C3AED'
+                  } : {
+                    borderColor: '#E5E7EB',
+                    backgroundColor: '#FFFFFF',
+                    color: '#6B7280'
+                  }}
+                >
+                  <span
+                    className="h-3 w-3 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: formData.role === 'admin' ? '#7C3AED' : '#D1D5DB' }}
+                  />
+                  Admin
+                </button>
+              </div>
+              <p className="text-xs" style={{ color: '#9CA3AF' }}>
+                {formData.role === 'admin'
+                  ? 'Admin dapat mengakses semua fitur termasuk manajemen pengguna.'
+                  : 'User hanya dapat mengakses fitur standar (aset, lokasi, kondisi, transaksi).'}
+              </p>
+            </div>
+
             <div className="flex items-center gap-3">
               <input
                 type="checkbox"

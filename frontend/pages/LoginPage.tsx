@@ -12,7 +12,7 @@ interface LoginPageProps {
 
 export function LoginPage({ onLogin }: LoginPageProps) {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +23,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
     setIsLoading(true);
 
     try {
-      const result = await AuthService.login(email, password);
+      const result = await AuthService.login(username, password);
       
       if (result.success) {
         onLogin?.();
@@ -109,15 +109,16 @@ export function LoginPage({ onLogin }: LoginPageProps) {
               
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="email" style={{ color: '#374151' }}>Email address</Label>
+                  <Label htmlFor="username" style={{ color: '#374151' }}>Username</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@company.com"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
+                    id="username"
+                    type="text"
+                    placeholder="Masukkan username anda"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
                     required
                     className="h-11"
+                    autoComplete="username"
                   />
                 </div>
 

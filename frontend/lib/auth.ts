@@ -23,17 +23,14 @@ interface Session {
 
 export class AuthService {
   // Login with backend API
-  static async login(email: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> {
+  static async login(identifier: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> {
     try {
-      // Extract username from email (e.g., admin@company.com -> admin)
-      const username = email.split('@')[0];
-
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username: identifier, password }),
       });
 
       if (!response.ok) {

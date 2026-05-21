@@ -5,18 +5,21 @@ export type PageType = 'inventory' | 'asset-management' | 'location-management' 
 interface LeftNavigationProps {
   currentPage: PageType;
   onPageChange: (page: PageType) => void;
+  userRole?: string;
 }
 
 const navItems = [
-  { id: 'inventory', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'asset-management', label: 'Manajemen Aset', icon: ClipboardList },
-  { id: 'location-management', label: 'Manajemen Lokasi', icon: MapPin },
-  { id: 'condition-management', label: 'Manajemen Kondisi', icon: Tag },
-  { id: 'user-management', label: 'Manajemen Pengguna', icon: Users },
-  { id: 'transaction-management', label: 'Manajemen Transaksi', icon: ArrowRightLeft },
+  { id: 'inventory', label: 'Dashboard', icon: LayoutDashboard, adminOnly: false },
+  { id: 'asset-management', label: 'Manajemen Aset', icon: ClipboardList, adminOnly: false },
+  { id: 'location-management', label: 'Manajemen Lokasi', icon: MapPin, adminOnly: false },
+  { id: 'condition-management', label: 'Manajemen Kondisi', icon: Tag, adminOnly: false },
+  { id: 'user-management', label: 'Manajemen Pengguna', icon: Users, adminOnly: true },
+  { id: 'transaction-management', label: 'Manajemen Transaksi', icon: ArrowRightLeft, adminOnly: false },
 ];
 
-export function LeftNavigation({ currentPage, onPageChange }: LeftNavigationProps) {
+export function LeftNavigation({ currentPage, onPageChange, userRole }: LeftNavigationProps) {
+  const isAdmin = userRole === 'admin';
+  const visibleNavItems = navItems.filter(item => !item.adminOnly || isAdmin);
   return (
     <nav className="hidden md:flex w-56 h-screen border-r bg-white fixed left-0 top-0 flex-col">
       <div className="px-4 py-5 border-b flex items-center" style={{ height: '73px' }}>
@@ -30,7 +33,7 @@ export function LeftNavigation({ currentPage, onPageChange }: LeftNavigationProp
 
       <div className="flex-1 overflow-y-auto p-3">
         <div className="space-y-0.5">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = currentPage === item.id;
 

@@ -17,11 +17,14 @@ import { AuthService } from '@/lib/auth';
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentPage, setCurrentPage] = useState<PageType>('inventory');
+  const [userRole, setUserRole] = useState<string>('user');
 
   useEffect(() => {
     const isAuthenticated = AuthService.isAuthenticated();
     if (isAuthenticated) {
       setIsLoggedIn(true);
+      const currentUser = AuthService.getCurrentUser();
+      setUserRole(currentUser?.role || 'user');
     }
   }, []);
 
@@ -29,6 +32,15 @@ function App() {
     AuthService.logout();
     setIsLoggedIn(false);
     setCurrentPage('inventory');
+    setUserRole('user');
+  };
+
+  const handlePageChange = (page: PageType) => {
+    // Guard: prevent non-admin users from accessing user-management
+    if (page === 'user-management' && userRole !== 'admin') {
+      return;
+    }
+    setCurrentPage(page);
   };
 
   const renderPage = () => {
@@ -51,18 +63,22 @@ function App() {
   };
 
   if (!isLoggedIn) {
-    return <LoginPage onLogin={() => setIsLoggedIn(true)} />;
+    return <LoginPage onLogin={() => {
+      setIsLoggedIn(true);
+      const currentUser = AuthService.getCurrentUser();
+      setUserRole(currentUser?.role || 'user');
+    }} />;
   }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F9FAFB' }}>
-      <LeftNavigation currentPage={currentPage} onPageChange={setCurrentPage} />
+      <LeftNavigation currentPage={currentPage} onPageChange={handlePageChange} userRole={userRole} />
 
       <div className="md:ml-56">
         <header className="border-b bg-white fixed top-0 right-0 md:left-56 left-0 z-50" style={{ height: '73px' }}>
           <div className="px-3 md:px-6 h-full flex items-center justify-between gap-2 md:gap-4">
             <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
-              <MobileNavigation currentPage={currentPage} onPageChange={setCurrentPage} />
+              <MobileNavigation currentPage={currentPage} onPageChange={handlePageChange} userRole={userRole} />
 
               <div className="md:hidden flex items-center gap-2">
                 <div className="p-1.5 rounded-lg flex-shrink-0" style={{ backgroundColor: '#EFF6FF' }}>
