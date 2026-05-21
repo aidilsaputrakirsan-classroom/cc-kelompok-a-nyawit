@@ -478,7 +478,7 @@ export function AssetManagementPage() {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold" style={{ color: '#111827' }}>Manajemen Aset</h1>
           <p className="text-xs md:text-sm mt-1" style={{ color: '#6B7280' }}>
-            Kelola data aset, jenis, dan cetak laporan
+            Kelola data aset, jenis, dan filter laporan
           </p>
         </div>
 
@@ -494,7 +494,7 @@ export function AssetManagementPage() {
             </TabsTrigger>
             <TabsTrigger value="cetak-laporan" className="flex items-center gap-1.5">
               <Printer className="h-4 w-4" />
-              Cetak Laporan
+              Filter Laporan
             </TabsTrigger>
           </TabsList>
 

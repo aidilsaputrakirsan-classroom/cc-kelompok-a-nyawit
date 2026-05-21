@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, Tag, Search, RefreshCw } from 'lucide-react';
+import { Plus, Pencil, Trash2, Tag, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { ConditionAPI, ConditionData } from '@/lib/api';
@@ -141,10 +141,6 @@ export function ConditionManagementPage() {
                 <span>Daftar Kondisi</span>
               </div>
               <div className="flex items-center gap-2">
-                <Button size="sm" variant="outline" onClick={fetchConditions} disabled={isLoading}>
-                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                  Refresh
-                </Button>
                 <Button size="sm" onClick={openAdd} style={{ backgroundColor: '#2563EB', color: '#FFFFFF' }}>
                   <Plus className="h-4 w-4 mr-2" />
                   Tambah Kondisi

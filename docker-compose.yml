@@ -1,28 +1,22 @@
 services:
-  database:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: it_asset_db
-      POSTGRES_USER: it_asset
-      POSTGRES_PASSWORD: it_asset_password
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    container_name: it_asset_backend
+    restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql+psycopg://it_asset:it_asset_password@database:5432/it_asset_db
+      APP_NAME: IT Asset Management API
+      APP_ENV: development
+      DATABASE_URL: sqlite:////data/it_asset.db
       SECRET_KEY: ${SECRET_KEY:-your-super-secret-key-change-in-production}
-      APP_ENV: production
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
       PORT: 8000
     ports:
       - "8000:8000"
-    depends_on:
-      - database
+    volumes:
+      - sqlite_data:/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
       interval: 30s
@@ -34,19 +28,16 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    container_name: it_asset_frontend
+    restart: unless-stopped
     environment:
-      FRONTEND_API_BASE_URL: http://localhost:8000/api/v1
+      FRONTEND_API_BASE_URL: ${FRONTEND_API_BASE_URL:-http://localhost:8000/api/v1}
       PORT: 80
     ports:
       - "80:80"
     depends_on:
-      - backend
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
+      backend:
+        condition: service_healthy
 
 volumes:
-  db_data:
+  sqlite_data:
