@@ -7,10 +7,10 @@ import { AssetTable } from '@/components/AssetTable';
 import { CategoryTabs } from '@/components/CategoryTabs';
 import { RecentTransactions } from '@/components/RecentTransactions';
 import { Toaster } from '@/components/ui/toaster';
-import { useAssets } from '@/hooks/useAssets';
-import { TransactionAPI } from '@/lib/api';
+import { useAssets } from '@/hooks/useAssets.ts';
+import { TransactionAPI } from '@/lib/api.ts';
 import type { Asset, AssetCategory } from '@/data/mockAssets';
-import type { Transaction } from '@/lib/api';
+import type { Transaction } from '@/lib/api.ts';
 
 export function DashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState<AssetCategory | 'All'>('All');

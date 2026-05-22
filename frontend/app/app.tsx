@@ -12,7 +12,7 @@ import { ConditionManagementPage } from '@/pages/ConditionManagementPage';
 import { UserManagementPage } from '@/pages/UserManagementPage';
 import { TransactionManagementPage } from '@/pages/TransactionManagementPage';
 import { LayoutDashboard } from 'lucide-react';
-import { AuthService } from '@/lib/auth';
+import { AuthService } from '@/lib/auth.ts';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { LocationAPI, AssetTypeAPI, type AssetTypeData, Location } from '@/lib/api';
+import { LocationAPI, AssetTypeAPI, type AssetTypeData, Location } from '@/lib/api.ts';
 import type { Asset, AssetStatus, AssetCondition, AssetCategory } from '@/data/mockAssets';
 
 interface AssetDialogProps {

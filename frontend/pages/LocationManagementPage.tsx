@@ -6,9 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Pencil, Trash2, MapPin, Search } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast.ts';
 import { Toaster } from '@/components/ui/toaster';
-import { API_BASE_URL } from '@/lib/api';
+import { API_BASE_URL } from '@/lib/api.ts';
 
 interface Location {
   id: number;

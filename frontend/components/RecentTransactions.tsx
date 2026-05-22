@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRightLeft, ArrowDownLeft, ArrowUpRight, RefreshCw } from 'lucide-react';
-import { TransactionAPI, AssetAPI, LocationAPI } from '@/lib/api';
-import type { Transaction, Asset, Location } from '@/lib/api';
+import { TransactionAPI, AssetAPI, LocationAPI } from '@/lib/api.ts';
+import type { Transaction, Asset, Location } from '@/lib/api.ts';
 
 interface EnrichedTransaction extends Transaction {
     assetName: string;

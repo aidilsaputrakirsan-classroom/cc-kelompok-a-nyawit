@@ -1,4 +1,4 @@
-import { AuthService } from '@/lib/auth';
+import { AuthService } from '@/lib/auth.ts';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,

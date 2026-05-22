@@ -9,12 +9,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ClipboardList, Plus, Pencil, Trash2, Printer, Search, FileDown, Layers } from 'lucide-react';
 import { AssetTable } from '@/components/AssetTable';
-import { useAssets } from '@/hooks/useAssets';
-import { useToast } from '@/hooks/use-toast';
+import { useAssets } from '@/hooks/useAssets.ts';
+import { useToast } from '@/hooks/use-toast.ts';
 import { Toaster } from '@/components/ui/toaster';
 import type { Asset } from '@/data/mockAssets';
 
-import { AssetTypeAPI, type AssetTypeData } from '@/lib/api';
+import { AssetTypeAPI, type AssetTypeData } from '@/lib/api.ts';
 
 const CATEGORY_STYLES: Record<string, { color: string; bg: string }> = {
   Hardware: { color: '#2563EB', bg: '#EFF6FF' },

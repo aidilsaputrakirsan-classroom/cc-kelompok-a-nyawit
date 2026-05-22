@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { LayoutDashboard, Shield, BarChart3, Package, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { AuthService } from '@/lib/auth';
+import { AuthService } from '@/lib/auth.ts';
 
 interface LoginPageProps {
   onLogin?: () => void;

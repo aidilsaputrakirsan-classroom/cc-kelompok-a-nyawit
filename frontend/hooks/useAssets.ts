@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { AssetAPI, Asset, AssetStatus, CategoryAPI, Category } from '@/lib/api';
-import { useToast } from '@/hooks/use-toast';
+import { AssetAPI, Asset, AssetStatus, CategoryAPI, Category } from '@/lib/api.ts';
+import { useToast } from '@/hooks/use-toast.ts';
 
 interface UseAssetsOptions {
     status?: AssetStatus;

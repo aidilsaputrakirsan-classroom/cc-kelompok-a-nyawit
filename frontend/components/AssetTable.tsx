@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Search, ChevronUp, ChevronDown, Plus, Pencil, Check, X } from 'lucide-react';
 import { AssetDialog } from '@/components/AssetDialog';
-import { useToast } from '@/hooks/use-toast';
-import { LocationAPI, AssetTypeAPI, type AssetTypeData, Location } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast.ts';
+import { LocationAPI, AssetTypeAPI, type AssetTypeData, Location } from '@/lib/api.ts';
 import type { Asset, AssetStatus, AssetCondition, AssetCategory } from '@/data/mockAssets';
 
 interface AssetTableProps {

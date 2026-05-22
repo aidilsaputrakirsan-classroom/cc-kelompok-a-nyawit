@@ -7,9 +7,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Pencil, Trash2, Users, Search, ShieldCheck, Package, Eye } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast.ts';
 import { Toaster } from '@/components/ui/toaster';
-import { API_BASE_URL } from '@/lib/api';
+import { API_BASE_URL } from '@/lib/api.ts';
 
 interface Asset {
   id: number;

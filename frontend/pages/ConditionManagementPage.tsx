@@ -5,10 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Pencil, Trash2, Tag, Search } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { Plus, Pencil, Trash2, Tag, Search, RefreshCw } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast.ts';
 import { Toaster } from '@/components/ui/toaster';
-import { ConditionAPI, ConditionData } from '@/lib/api';
+import { ConditionAPI, ConditionData } from '@/lib/api.ts';
 
 type Condition = ConditionData;
 

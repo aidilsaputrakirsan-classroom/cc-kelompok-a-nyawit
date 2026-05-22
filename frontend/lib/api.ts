@@ -1,4 +1,4 @@
-import { getApiBaseUrl } from '@/lib/runtime-config';
+import { getApiBaseUrl } from '@/lib/runtime-config.ts';
 
 // API Service for connecting frontend to backend
 // Use runtime config in production and fall back to the local proxy in development.

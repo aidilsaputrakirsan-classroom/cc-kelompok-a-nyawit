@@ -8,9 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Pencil, Trash2, ArrowRightLeft, Search } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast.ts';
 import { Toaster } from '@/components/ui/toaster';
-import { TransactionAPI, Transaction, TransactionType, Asset, Location, AssetAPI, LocationAPI } from '@/lib/api';
+import { TransactionAPI, Transaction, TransactionType, Asset, Location, AssetAPI, LocationAPI } from '@/lib/api.ts';
 
 interface TransactionWithDetails extends Transaction {
     asset?: Asset;
