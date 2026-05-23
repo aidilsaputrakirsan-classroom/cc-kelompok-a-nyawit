@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,6 +47,33 @@ export function TransactionManagementPage() {
     });
     const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
     const { toast } = useToast();
+
+    // Asset search combobox state
+    const [assetSearch, setAssetSearch] = useState('');
+    const [assetDropdownOpen, setAssetDropdownOpen] = useState(false);
+    const assetComboRef = useRef<HTMLDivElement>(null);
+
+    const filteredAssetSuggestions = assetSearch.trim()
+        ? assets.filter(a =>
+            a.name.toLowerCase().includes(assetSearch.toLowerCase()) ||
+            a.asset_code.toLowerCase().includes(assetSearch.toLowerCase())
+          )
+        : assets;
+
+    const selectedAssetLabel = formData.asset_id
+        ? (() => { const a = assets.find(a => a.id.toString() === formData.asset_id); return a ? `${a.name} (${a.asset_code})` : ''; })()
+        : '';
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (assetComboRef.current && !assetComboRef.current.contains(e.target as Node)) {
+                setAssetDropdownOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     // Fetch data on mount
     useEffect(() => {
@@ -309,26 +336,75 @@ export function TransactionManagementPage() {
                     <div className="space-y-4 py-2">
                         <div className="space-y-2">
                             <Label>Aset <span className="text-red-500">*</span></Label>
-                            <Select value={formData.asset_id} onValueChange={v => {
-                                const selectedAsset = assets.find(a => a.id.toString() === v);
-                                const fromLoc = locations.find(l => l.name === selectedAsset?.location);
-                                setFormData({ 
-                                    ...formData, 
-                                    asset_id: v,
-                                    from_location_id: fromLoc ? fromLoc.id.toString() : ''
-                                });
-                            }}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Pilih aset" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {assets.map(asset => (
-                                        <SelectItem key={asset.id} value={asset.id.toString()}>
-                                            {asset.name} ({asset.asset_code})
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <div ref={assetComboRef} className="relative">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                                    <Input
+                                        placeholder={selectedAssetLabel || 'Cari nama atau kode aset...'}
+                                        value={assetSearch}
+                                        onChange={e => {
+                                            setAssetSearch(e.target.value);
+                                            setAssetDropdownOpen(true);
+                                            // Clear selection when user starts typing new search
+                                            if (formData.asset_id) {
+                                                setFormData({ ...formData, asset_id: '', from_location_id: '' });
+                                            }
+                                        }}
+                                        onFocus={() => setAssetDropdownOpen(true)}
+                                        className={`pl-9 ${formData.asset_id ? 'border-blue-500 ring-1 ring-blue-200' : ''}`}
+                                    />
+                                    {formData.asset_id && (
+                                        <button
+                                            type="button"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                            onClick={() => {
+                                                setFormData({ ...formData, asset_id: '', from_location_id: '' });
+                                                setAssetSearch('');
+                                                setAssetDropdownOpen(false);
+                                            }}
+                                        >
+                                            ✕
+                                        </button>
+                                    )}
+                                </div>
+                                {formData.asset_id && !assetDropdownOpen && (
+                                    <div className="mt-1 px-3 py-1.5 text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-md flex items-center gap-2">
+                                        <span className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
+                                        {selectedAssetLabel}
+                                    </div>
+                                )}
+                                {assetDropdownOpen && (
+                                    <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-52 overflow-y-auto">
+                                        {filteredAssetSuggestions.length === 0 ? (
+                                            <div className="px-4 py-3 text-sm text-gray-400 text-center">Aset tidak ditemukan</div>
+                                        ) : (
+                                            filteredAssetSuggestions.map(asset => (
+                                                <button
+                                                    key={asset.id}
+                                                    type="button"
+                                                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 transition-colors flex items-center justify-between gap-2 ${
+                                                        formData.asset_id === asset.id.toString() ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-800'
+                                                    }`}
+                                                    onMouseDown={e => e.preventDefault()}
+                                                    onClick={() => {
+                                                        const fromLoc = locations.find(l => l.name === asset.location);
+                                                        setFormData({
+                                                            ...formData,
+                                                            asset_id: asset.id.toString(),
+                                                            from_location_id: fromLoc ? fromLoc.id.toString() : ''
+                                                        });
+                                                        setAssetSearch('');
+                                                        setAssetDropdownOpen(false);
+                                                    }}
+                                                >
+                                                    <span className="truncate">{asset.name}</span>
+                                                    <span className="text-xs text-gray-400 flex-shrink-0">{asset.asset_code}</span>
+                                                </button>
+                                            ))
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         <div className="space-y-2">
                             <Label>Tipe Transaksi</Label>
