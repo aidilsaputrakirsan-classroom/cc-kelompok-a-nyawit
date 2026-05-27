@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.api.router import api_router
 from app.db.database import SessionLocal
-from app.db.init_db import init_db, seed_admin_user, seed_categories, seed_locations, seed_assets, seed_asset_types
+from app.db.init_db import init_db, seed_admin_user, seed_categories, seed_locations, seed_asset_types
 from app.models import Asset, AssetType, BorrowLog, Category, User, Location, Transaction  # noqa: F401 - imported for SQLAlchemy registration
 
 logging.basicConfig(level=logging.INFO)
@@ -65,8 +65,6 @@ def on_startup() -> None:
                 logger.info("Asset types seeded")
                 seed_locations(db)
                 logger.info("Locations seeded")
-                seed_assets(db)
-                logger.info("Assets seeded")
                 seed_admin_user(db)
                 logger.info("Admin user seeded")
             except Exception as seed_error:
