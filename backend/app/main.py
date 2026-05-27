@@ -82,4 +82,4 @@ def on_startup() -> None:
             if attempt < 5:
                 time.sleep(5)
 
-    raise RuntimeError("Database initialization failed after retries") from last_error
+    logger.error("Database initialization failed after retries, but continuing startup to expose health check errors.")
