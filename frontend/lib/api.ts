@@ -157,7 +157,7 @@ export interface AssetUpdate {
     last_update?: string;
     condition?: AssetCondition;
     quantity?: number;
-    serial_number?: string;
+    serial_number?: string | null;
     brand?: string;
     model?: string;
     specs?: string;

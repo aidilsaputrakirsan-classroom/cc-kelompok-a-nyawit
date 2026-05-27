@@ -5,18 +5,18 @@ export type AssetCondition = 'Excellent' | 'Good' | 'Fair' | 'Poor';
 
 export interface Asset {
   id: string;
-  asset_code?: string;
+  asset_code: string;
   name: string;
   type: string;
   category: AssetCategory;
-  category_id?: number;
   location: string;
-  location_id?: number;
   status: AssetStatus;
   assignedTo: string;
   purchaseDate: string;
   lastUpdate: string;
   condition: AssetCondition;
+  quantity: number;
+  serial_number?: string | null;
 }
 
 const assetTypes = {
@@ -67,6 +67,7 @@ function generateMockAssets(count: number): Asset[] {
 
     assets.push({
       id: generateAssetId(category, i),
+      asset_code: `${category.substring(0, 3).toUpperCase()}-${String(i).padStart(4, '0')}`,
       name: `${type} ${i}`,
       type,
       category,
@@ -76,6 +77,8 @@ function generateMockAssets(count: number): Asset[] {
       purchaseDate,
       lastUpdate,
       condition,
+      quantity: 1,
+      serial_number: null,
     });
   }
   
