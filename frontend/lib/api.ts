@@ -1,4 +1,4 @@
-import { getApiBaseUrl } from '@/lib/runtime-config.ts';
+import { getApiBaseUrl } from '@/lib/runtime-config';
 
 // API Service for connecting frontend to backend
 // Use runtime config in production and fall back to the local proxy in development.
@@ -156,6 +156,7 @@ export interface AssetUpdate {
     purchase_date?: string;
     last_update?: string;
     condition?: AssetCondition;
+    quantity?: number;
     serial_number?: string;
     brand?: string;
     model?: string;
