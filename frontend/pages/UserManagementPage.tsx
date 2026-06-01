@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2, Users, Search, ShieldCheck, Package, Eye } from 'lucide-react';
+import { Plus, Pencil, Trash2, Users, Search, ShieldCheck, Package, Eye, ShieldAlert } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast.ts';
 import { Toaster } from '@/components/ui/toaster';
 import { API_BASE_URL } from '@/lib/api.ts';
@@ -98,7 +98,25 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
   return response.text();
 }
 
-export function UserManagementPage() {
+export function UserManagementPage({ userRole }: { userRole?: string }) {
+  // ── Self-guard: lapisan ketiga pertahanan role-based access ─────────────────
+  // Halaman ini menolak render konten sensitif jika bukan admin,
+  // terlepas dari bagaimana komponen ini dipanggil.
+  if (userRole !== 'admin') {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 gap-4">
+        <ShieldAlert className="h-16 w-16" style={{ color: '#EF4444' }} />
+        <div className="text-center">
+          <p className="text-lg font-semibold" style={{ color: '#111827' }}>Akses Ditolak</p>
+          <p className="text-sm mt-1" style={{ color: '#6B7280' }}>
+            Halaman ini hanya dapat diakses oleh Administrator.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  // ────────────────────────────────────────────────────────────────────────────
+
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');

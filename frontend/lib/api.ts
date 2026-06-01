@@ -28,14 +28,19 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    console.log(`API Request: ${options.method || 'GET'} ${API_BASE_URL}${url}`);
+    // Log hanya di development — tidak bocor ke production DevTools
+    if (import.meta.env.DEV) {
+        console.log(`API Request: ${options.method || 'GET'} ${url}`);
+    }
 
     const response = await fetch(`${API_BASE_URL}${url}`, {
         ...options,
         headers,
     });
 
-    console.log(`API Response: ${response.status} ${response.statusText}`);
+    if (import.meta.env.DEV) {
+        console.log(`API Response: ${response.status} ${response.statusText}`);
+    }
 
     if (!response.ok) {
         const error = await response.json().catch(() => ({ detail: 'Unknown error' }));

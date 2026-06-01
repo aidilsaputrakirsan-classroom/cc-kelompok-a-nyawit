@@ -4,8 +4,31 @@ server {
   root /usr/share/nginx/html;
   index index.html;
 
+  # ── Security Headers ────────────────────────────────────────────────────────
+  # Mencegah halaman di-embed sebagai iframe dari domain lain (Clickjacking)
+  add_header X-Frame-Options "SAMEORIGIN" always;
+
+  # Mencegah browser menebak content-type (MIME sniffing attack)
+  add_header X-Content-Type-Options "nosniff" always;
+
+  # Mengaktifkan proteksi XSS bawaan browser lama
+  add_header X-XSS-Protection "1; mode=block" always;
+
+  # Membatasi informasi referrer yang dikirim ke situs lain
+  add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+  # Menonaktifkan fitur browser yang tidak digunakan (geolocation, mic, kamera)
+  add_header Permissions-Policy "geolocation=(), microphone=(), camera=()" always;
+
+  # Content Security Policy — membatasi sumber skrip & aset yang boleh dimuat
+  # 'unsafe-inline' diperlukan oleh Vite/React untuk inline styles
+  add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none';" always;
+  # ────────────────────────────────────────────────────────────────────────────
+
   location = /config.js {
     add_header Cache-Control "no-store, no-cache, must-revalidate, proxy-revalidate" always;
+    # Pastikan security headers juga berlaku untuk config.js
+    add_header X-Content-Type-Options "nosniff" always;
   }
 
   location / {

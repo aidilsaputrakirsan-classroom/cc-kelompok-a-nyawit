@@ -11,21 +11,44 @@ import { LocationManagementPage } from '@/pages/LocationManagementPage';
 import { ConditionManagementPage } from '@/pages/ConditionManagementPage';
 import { UserManagementPage } from '@/pages/UserManagementPage';
 import { TransactionManagementPage } from '@/pages/TransactionManagementPage';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, ShieldAlert } from 'lucide-react';
 import { AuthService } from '@/lib/auth.ts';
+
+// ─── Aturan akses terpusat ────────────────────────────────────────────────────
+// Tambahkan halaman baru di sini untuk mengatur siapa yang boleh mengaksesnya.
+const PAGE_ACCESS: Record<PageType, { requiresAuth: boolean; allowedRoles: string[] | null }> = {
+  'inventory':              { requiresAuth: true, allowedRoles: null },          // null = semua role
+  'asset-management':      { requiresAuth: true, allowedRoles: null },
+  'location-management':   { requiresAuth: true, allowedRoles: null },
+  'condition-management':  { requiresAuth: true, allowedRoles: null },
+  'transaction-management':{ requiresAuth: true, allowedRoles: null },
+  'user-management':       { requiresAuth: true, allowedRoles: ['admin'] },      // hanya admin
+};
+
+/** Sumber kebenaran tunggal untuk pengecekan akses halaman */
+function canAccessPage(page: PageType, userRole: string): boolean {
+  const rule = PAGE_ACCESS[page];
+  if (!rule) return false;
+  if (rule.allowedRoles === null) return true;          // semua role diizinkan
+  return rule.allowedRoles.includes(userRole);
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true); // cegah flash sebelum sesi dicek
   const [currentPage, setCurrentPage] = useState<PageType>('inventory');
   const [userRole, setUserRole] = useState<string>('user');
 
   useEffect(() => {
+    // Cek sesi yang tersimpan saat aplikasi pertama kali dimuat
     const isAuthenticated = AuthService.isAuthenticated();
     if (isAuthenticated) {
       setIsLoggedIn(true);
       const currentUser = AuthService.getCurrentUser();
       setUserRole(currentUser?.role || 'user');
     }
+    setIsInitializing(false); // selesai inisialisasi, baru render UI
   }, []);
 
   const handleLogout = () => {
@@ -36,14 +59,32 @@ function App() {
   };
 
   const handlePageChange = (page: PageType) => {
-    // Guard: prevent non-admin users from accessing user-management
-    if (page === 'user-management' && userRole !== 'admin') {
-      return;
+    // Gunakan fungsi terpusat canAccessPage sebagai sumber kebenaran
+    if (!canAccessPage(page, userRole)) {
+      return; // diam-diam tolak navigasi ke halaman yang tidak diizinkan
     }
     setCurrentPage(page);
   };
 
   const renderPage = () => {
+    // ── Lapisan pertahanan kedua (defense-in-depth) ──────────────────────────
+    // Meskipun handlePageChange sudah memblokir navigasi, guard ini memastikan
+    // halaman terlarang TIDAK PERNAH dirender bahkan jika state dimanipulasi.
+    if (!canAccessPage(currentPage, userRole)) {
+      return (
+        <div className="flex flex-col items-center justify-center h-64 gap-4">
+          <ShieldAlert className="h-16 w-16" style={{ color: '#EF4444' }} />
+          <div className="text-center">
+            <p className="text-lg font-semibold" style={{ color: '#111827' }}>Akses Ditolak</p>
+            <p className="text-sm mt-1" style={{ color: '#6B7280' }}>
+              Anda tidak memiliki izin untuk mengakses halaman ini.
+            </p>
+          </div>
+        </div>
+      );
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     switch (currentPage) {
       case 'inventory':
         return <DashboardPage />;
@@ -54,13 +95,25 @@ function App() {
       case 'condition-management':
         return <ConditionManagementPage />;
       case 'user-management':
-        return <UserManagementPage />;
+        return <UserManagementPage userRole={userRole} />;
       case 'transaction-management':
         return <TransactionManagementPage />;
       default:
         return <DashboardPage />;
     }
   };
+
+  // Tampilkan layar kosong selama sesi sedang dicek untuk mencegah flash
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F9FAFB' }}>
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 rounded-full border-4 border-t-transparent animate-spin" style={{ borderColor: '#2563EB', borderTopColor: 'transparent' }} />
+          <p className="text-sm" style={{ color: '#6B7280' }}>Memuat...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     return <LoginPage onLogin={() => {
