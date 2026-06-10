@@ -1,19 +1,19 @@
 from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.asset import AssetStatus, AssetCondition
 
 
 class AssetBase(BaseModel):
     asset_code: str
-    name: str
+    name: str = Field(max_length=200)
     type: str
     category_id: int
     location: str | None = None
     location_id: int | None = None
     status: AssetStatus = AssetStatus.AVAILABLE
-    quantity: int = 1
+    quantity: int = Field(default=1, ge=0)
     assigned_to: str | None = None
     purchase_date: date | None = None
     last_update: date | None = None
@@ -32,13 +32,13 @@ class AssetCreate(AssetBase):
 
 class AssetUpdate(BaseModel):
     asset_code: str | None = None
-    name: str | None = None
+    name: str | None = Field(default=None, max_length=200)
     type: str | None = None
     category_id: int | None = None
     location: str | None = None
     location_id: int | None = None
     status: AssetStatus | None = None
-    quantity: int | None = None
+    quantity: int | None = Field(default=None, ge=0)
     assigned_to: str | None = None
     purchase_date: date | None = None
     last_update: date | None = None

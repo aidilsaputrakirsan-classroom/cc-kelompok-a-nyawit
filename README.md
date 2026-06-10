@@ -39,7 +39,15 @@ Sistem ini membantu administrator IT dalam menjaga transparansi distribusi aset,
 | **Container** | Docker | Latest |
 | **Process Manager** | Supervisord | Latest |
 
-### Arsitektur deployment menggunakan Docker dengan pattern berikut:
+### Arsitektur Microservices (Docker Pattern)
+
+```mermaid
+graph TD
+    Client([Client Browser]) -->|Akses UI| Frontend[Frontend Service <br/> React + Nginx]
+    Client -->|REST API HTTP| Backend[Backend Service <br/> FastAPI]
+    Backend -->|Koneksi Data| DB[(Database Service <br/> PostgreSQL / SQLite)]
+```
+
 - **Frontend service**: Build React/Vite di image terpisah lalu diserve oleh Nginx
 - **Backend service**: FastAPI berjalan sendiri di container Python terpisah
 - **Database service**: PostgreSQL terpisah untuk deployment Railway dan environment production
@@ -380,3 +388,21 @@ cc-kelompok-a-nyawit/
 - Membuat dokumentasi API dengan Swagger UI
 - Menguji fungsionalitas sistem secara menyeluruh
 - Menulis dokumentasi proyek dan user guide
+
+---
+
+## Project Journey
+
+Aplikasi ini berevolusi dari sebuah sistem terpadu (monolith-like) menjadi arsitektur berbasis container (microservices-ready). Perubahan ini dilakukan untuk meningkatkan skalabilitas dan memudahkan deployment di lingkungan cloud (seperti Railway).
+
+1. **Fase 1: Monolith Sederhana**
+   Pada awalnya, frontend dan backend berjalan di satu environment pengembangan menggunakan SQLite lokal untuk penyimpanan sementara, tanpa pembagian service yang kaku.
+
+2. **Fase 2: Pemisahan Frontend & Backend**
+   Memisahkan proses build dan run menjadi dua entitas independen (React Vite & FastAPI). Keduanya dikomunikasikan melalui REST API yang terdefinisi dengan jelas menggunakan OpenAPI/Swagger.
+
+3. **Fase 3: Containerization & Docker**
+   Setiap komponen (*Frontend*, *Backend*, *Database*) dibungkus menjadi Docker *container* terpisah menggunakan `docker-compose`. Hal ini memastikan konsistensi dari tahap *development* hingga ke *production*.
+
+4. **Fase 4: Microservices-Ready & Cloud Deployment**
+   Sistem diatur ulang sehingga dapat di-*deploy* secara mandiri (*independent scaling*). Frontend dikelola oleh *web server* statis (Nginx), Backend berjalan sebagai API *gateway/service* mandiri, dan *Database* sepenuhnya dipisahkan menjadi *managed service* PostgreSQL di cloud (Railway).
