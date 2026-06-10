@@ -1,11 +1,5 @@
 # IT Asset Management System (Sistem Manajemen Aset IT)
 
-[![CI Pipeline](https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit/actions/workflows/ci.yml/badge.svg)](https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit/branch/main/graph/badge.svg)](https://codecov.io/gh/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit)
-![Python](https://img.shields.io/badge/python-3.12-blue)
-![FastAPI](https://img.shields.io/badge/FastAPI-backend-green)
-![Docker](https://img.shields.io/badge/docker-ready-blue)
-
 ## Tim Pengembang
 
 | Nama | NIM | Peran |
@@ -83,8 +77,13 @@ python -m venv .venv
 pip install -r requirements.txt
 
 # Buat database SQLite atau configure PostgreSQL
-#汕头置 .env sesuai kebutuhan
+# Untuk development: gunakan `--reload` agar server otomatis restart saat kode berubah
+# (Hanya untuk development)
 uvicorn app.main:app --reload
+
+# Untuk produksi: jalankan tanpa `--reload` dan gunakan process manager atau container
+# Contoh (langsung menjalankan uvicorn untuk production):
+# uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
 Backend API: **http://localhost:8000**
@@ -114,19 +113,21 @@ docker compose ps
 
 | Service | URL | Keterangan |
 |---------|-----|-----------|
-| Frontend | http://localhost | Halaman utama (React) |
-| API | http://localhost:8000 | Backend API |
-| Swagger UI | http://localhost:8000/docs | Dokumentasi API Interaktif |
-| ReDoc | http://localhost:8000/redoc | Dokumentasi API (ReDoc) |
+| Frontend | https://manajemenaset.up.railway.app | Halaman utama (React) |
+| API | https://manajemenaset.up.railway.app/api/v1 | Backend API |
+| Swagger UI | https://manajemenaset.up.railway.app/api/v1/docs | Dokumentasi API Interaktif |
+| ReDoc | https://manajemenaset.up.railway.app/api/v1/redoc | Dokumentasi API (ReDoc) |
 
 ### Deploy ke Railway
+
+Deployment production dijalankan langsung oleh Railway auto-deploy dari GitHub. Jadi workflow CD GitHub Actions tidak dipakai untuk proyek ini.
 
 Gunakan tiga service terpisah:
 1. **Frontend**: set root ke folder `frontend/` dan build dari [frontend/Dockerfile](frontend/Dockerfile).
 2. **Backend**: set root ke folder `backend/` dan build dari [backend/Dockerfile](backend/Dockerfile).
 3. **Database**: pakai service PostgreSQL Railway, lalu isi `DATABASE_URL` di backend dengan connection string PostgreSQL dari Railway.
 
-Untuk frontend, set `FRONTEND_API_BASE_URL` ke URL publik backend Railway, misalnya `https://your-backend.up.railway.app/api/v1`.
+Untuk frontend, set `FRONTEND_API_BASE_URL` ke URL publik backend Railway, misalnya `https://manajemenaset.up.railway.app/api/v1`.
 Untuk backend, set `DATABASE_URL` ke URL PostgreSQL Railway, misalnya `postgresql+psycopg://...`.
 
 #### Default Users
@@ -319,15 +320,23 @@ Riwayat peminjaman dan pengembalian aset
 | APP_ENV | production | Environment (development/production) |
 
 ### Development (Backend)
-Buat file `.env` di folder `backend/`:
+Buat file `.env` di folder `backend/` (contoh):
 ```env
 APP_NAME=IT Asset Management API
 APP_ENV=development
 DATABASE_URL=sqlite:///data/it_asset.db
-SECRET_KEY=your-secret-key-change-in-production
+# Ganti dengan string acak kuat untuk production (minimal 32 karakter)
+SECRET_KEY=CHANGE_ME_USE_RANDOM_STRING_MIN_32_CHARS
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
+
+## Production Security Checklist
+
+- Pastikan `SECRET_KEY`, `DATABASE_URL`, dan `ALLOW_ORIGINS` di-set di environment produksi.
+- Jangan gunakan `ALLOW_ORIGINS=*` di produksi — set ke domain frontend Anda.
+- Pastikan gateway Nginx rate limiting di-deploy di lingkungan produksi (lihat `backend/nginx.conf`).
+- Jangan menjalankan `uvicorn --reload` di produksi; gunakan proses manager atau container orchestration.
 
 ---
 

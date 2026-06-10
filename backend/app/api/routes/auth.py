@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
@@ -13,8 +13,10 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 @router.post("/login", response_model=Token)
 def login(payload: UserLogin, db: Session = Depends(get_db)) -> dict:
     """Authenticate user and return JWT token."""
-    # Find user by username
-    user = db.scalar(select(User).where(User.username == payload.username))
+    # Find user by username OR email (accept email input from frontend)
+    user = db.scalar(
+        select(User).where(or_(User.username == payload.username, User.email == payload.username))
+    )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 from typing import Optional
 
@@ -10,7 +10,7 @@ class TransactionBase(BaseModel):
     from_location_id: Optional[int] = None
     to_location_id: Optional[int] = None
     transaction_type: TransactionType = TransactionType.IN
-    quantity: int = 1
+    quantity: int = Field(default=1, ge=0)
     notes: Optional[str] = None
 
 
@@ -30,5 +30,5 @@ class TransactionUpdate(BaseModel):
     from_location_id: Optional[int] = None
     to_location_id: Optional[int] = None
     transaction_type: Optional[TransactionType] = None
-    quantity: Optional[int] = None
-    notes: Optional[str] = None
+    quantity: Optional[int] = Field(default=None, ge=0)
+    notes: Optional[str] = Field(default=None, max_length=1000)

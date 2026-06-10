@@ -1,5 +1,5 @@
-# Production dependencies only (no test/dev packages)
 fastapi
+httpx
 uvicorn[standard]
 sqlalchemy[asyncio]
 aiosqlite

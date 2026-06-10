@@ -2,12 +2,12 @@
 import sys
 import os
 
-# Add the backend directory to the path
-sys.path.insert(0, 'd:\\Ilham\\cc-kelompok-a-nyawit\\backend')
+# Add the backend directory to the path (use repo-relative path if needed)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Set a test DATABASE_URL that doesn't require actual database connection for initial import testing
-os.environ['DATABASE_URL'] = 'postgresql+psycopg://postgres:postgres@postgres:5432/it_asset_db'
-os.environ['APP_ENV'] = 'development'
+# Use a lightweight SQLite DB for import checks unless DATABASE_URL already provided
+os.environ.setdefault('DATABASE_URL', 'sqlite:///./data/it_asset_test.db')
+os.environ.setdefault('APP_ENV', 'development')
 
 try:
     print("Attempting to import FastAPI app...")

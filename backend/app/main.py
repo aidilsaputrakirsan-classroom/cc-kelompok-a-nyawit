@@ -1,4 +1,5 @@
 import logging
+import os
 import time
 
 # Configure detailed logging
@@ -26,11 +27,14 @@ app = FastAPI(
     version="1.1.0",
 )
 
-# Configure CORS - allow all origins for Docker deployment
-# In production, restrict this to your specific domain
+# Configure CORS from environment variable `ALLOW_ORIGINS` (comma-separated)
+# Default to http://localhost for local development. Do NOT use `*` in production.
+allow_origins_env = os.getenv("ALLOW_ORIGINS", "http://localhost")
+allow_origins = [o.strip() for o in allow_origins_env.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allow_origins,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -50,29 +54,36 @@ def on_startup() -> None:
     logger.info("Starting up IT Asset Management API...")
 
     last_error: Exception | None = None
+    # Attempt to initialize DB with retries
     for attempt in range(1, 6):
         try:
             logger.info("Creating database tables (attempt %s/5)...", attempt)
             init_db()
             logger.info("Database tables created successfully")
 
-            db: Session = SessionLocal()
-            try:
-                logger.info("Seeding initial data...")
-                seed_categories(db)
-                logger.info("Categories seeded")
-                seed_asset_types(db)
-                logger.info("Asset types seeded")
-                seed_locations(db)
-                logger.info("Locations seeded")
-                seed_admin_user(db)
-                logger.info("Admin user seeded")
-            except Exception as seed_error:
-                logger.error(f"Error during seeding: {seed_error}")
-                db.rollback()
-                raise
-            finally:
-                db.close()
+            # Only run seeding if AUTO_SEED environment variable is truthy
+            auto_seed = os.getenv("AUTO_SEED", "false").lower() in ("1", "true", "yes")
+
+            if auto_seed:
+                db: Session = SessionLocal()
+                try:
+                    logger.info("Seeding initial data (AUTO_SEED enabled)...")
+                    seed_categories(db)
+                    logger.info("Categories seeded")
+                    seed_asset_types(db)
+                    logger.info("Asset types seeded")
+                    seed_locations(db)
+                    logger.info("Locations seeded")
+                    seed_admin_user(db)
+                    logger.info("Admin user seeded")
+                except Exception as seed_error:
+                    logger.error(f"Error during seeding: {seed_error}")
+                    db.rollback()
+                    raise
+                finally:
+                    db.close()
+            else:
+                logger.info("AUTO_SEED not enabled - skipping data seeding on startup")
 
             logger.info("Startup complete!")
             return

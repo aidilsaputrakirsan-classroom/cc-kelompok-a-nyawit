@@ -3,7 +3,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -39,6 +39,14 @@ class Settings(BaseSettings):
             return f"sqlite:///{absolute_path.as_posix()}"
 
         return value
+
+    @model_validator(mode="after")
+    def check_secret_in_production(self):
+        """Ensure SECRET_KEY is set when running in production."""
+        if getattr(self, "app_env", "development") == "production":
+            if not self.secret_key or self.secret_key == "your-super-secret-key-change-in-production":
+                raise ValueError("SECRET_KEY must be set in production via environment variable")
+        return self
 
 
 @lru_cache
