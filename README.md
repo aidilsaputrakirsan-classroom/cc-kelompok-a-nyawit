@@ -378,7 +378,9 @@ cc-kelompok-a-nyawit/
 - Proyek ini merupakan bagian dari tugas Cloud Computing Kelompok A Nyawit.
 - **Framework:** React, FastAPI, SQLite/PostgreSQL, Nginx, Supervisord
 
-## Peran Tim
+## Test GitHub Actions Trigger
+
+This line was added to trigger the CI pipeline.
 
 ### Ilham Ahmad Fahriji (10231042)
 **Lead Backend & Lead DevOps**
