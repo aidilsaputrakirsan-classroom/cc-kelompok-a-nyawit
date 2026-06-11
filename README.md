@@ -394,7 +394,6 @@ cc-kelompok-a-nyawit/
 - Merancang dan mengembangkan UI dengan React + TypeScript
 - Mengimplementasikan desain dengan Tailwind CSS dan Radix UI
 - Mengintegrasikan frontend dengan backend API
-- Membuat dokumentasi API dengan Swagger UI
 - Menguji fungsionalitas sistem secara menyeluruh
 - Menulis dokumentasi proyek dan user guide
 
