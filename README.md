@@ -1,417 +1,314 @@
-# IT Asset Management System (Sistem Manajemen Aset IT)
+# ☁️ Cloud App — IT Asset Management System
 
-## Tim Pengembang
+> Aplikasi cloud-native untuk manajemen aset dan inventory IT, dibangun dengan FastAPI, React + Vite, Docker Compose, dan Nginx gateway sebagai proyek mata kuliah Komputasi Awan — Institut Teknologi Kalimantan.
 
-| Nama | NIM | Peran |
-|------|-----|-------|
-| Ilham Ahmad Fahriji | 10231042 | Lead Backend & Lead DevOps |
-| Putu Ngurah Semara | 10231075 | Lead Frontend & Lead QA & Docs |
+![CI](https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit/actions/workflows/ci.yml/badge.svg)
+![CD](https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit/actions/workflows/ci.yml/badge.svg?branch=main)
 
-## Deskripsi Proyek
-Sistem Manajemen Aset IT adalah platform khusus yang dirancang untuk mengelola dan mendata seluruh infrastruktur perangkat keras perusahaan. Berbeda dengan sistem inventaris umum, aplikasi ini difokuskan pada kebutuhan spesifik departemen IT, mulai dari pengelolaan perangkat di *data center* hingga perangkat *endpoint* yang digunakan oleh karyawan.
-
-Sistem ini membantu administrator IT dalam menjaga transparansi distribusi aset, memantau kesehatan perangkat, serta memastikan efisiensi dalam perencanaan kapasitas jaringan dan server.
-
-## Teknologi yang Digunakan
-
-### Tech Stack
-
-| Layer | Technology | Version |
-|-------|------------|---------|
-| **Frontend** | React + TypeScript | React 18 |
-| **Build Tool** | Vite | Latest |
-| **Styling** | Tailwind CSS | Latest |
-| **UI Components** | Radix UI | Latest |
-| **Package Manager** | Bun | Latest |
-| **Icons** | Lucide React | Latest |
-| **Backend** | FastAPI (Python) | 3.12 |
-| **Database** | SQLite / PostgreSQL | - |
-| **ORM** | SQLAlchemy | Latest |
-| **Auth** | JWT (Python-Jose) | Latest |
-| **Server** | Uvicorn | Latest |
-| **Web Server** | Nginx | Latest |
-| **Container** | Docker | Latest |
-| **Process Manager** | Supervisord | Latest |
-
-### Arsitektur Microservices (Docker Pattern)
+## 🏗️ Architecture
 
 ```mermaid
-graph TD
-    Client([Client Browser]) -->|Akses UI| Frontend[Frontend Service <br/> React + Nginx]
-    Client -->|REST API HTTP| Backend[Backend Service <br/> FastAPI]
-    Backend -->|Koneksi Data| DB[(Database Service <br/> PostgreSQL / SQLite)]
+flowchart TD
+USER["👤 User"] --> GW["🌐 Frontend / Nginx Gateway<br/>React + Vite"]
+GW -->|"REST /api/v1/*"| API["🔐 Backend API<br/>FastAPI :8000"]
+API --> DB[("Database<br/>SQLite / PostgreSQL")]
+
+API --> AUTH["Authentication<br/>JWT + bcrypt"]
+API --> ASSET["Asset Inventory<br/>CRUD + relations"]
+API --> BORROW["Borrow Logs<br/>Borrow / Return"]
 ```
 
-- **Frontend service**: Build React/Vite di image terpisah lalu diserve oleh Nginx
-- **Backend service**: FastAPI berjalan sendiri di container Python terpisah
-- **Database service**: PostgreSQL terpisah untuk deployment Railway dan environment production
-- **Runtime config**: Frontend membaca base URL API dari `config.js` agar bisa diarahkan ke backend Railway
+### Architecture Evolution
 
----
+| Phase | Weeks | Architecture |
+|---|---:|---|
+| Foundation | 1–4 | Monolith (FastAPI + React + SQLite) |
+| Containerization | 5–7 | Docker Compose with separate backend and frontend services |
+| CI/CD | 9–11 | GitHub Actions + Railway deployment |
+| Gateway & Security | 12–14 | Nginx frontend serving, reverse proxy config, JWT auth, CORS |
+| Final | 15–16 | Security hardened, rate limiting, input validation, formatter config, final docs |
 
-## Cara Menjalankan
+## 🛠️ Tech Stack
 
-### Pengembangan (Development)
+| Layer | Technology | Purpose |
+|---|---|---|
+| Frontend | React + TypeScript + Vite | Single Page Application |
+| Styling | Tailwind CSS + Radix UI | Responsive UI and accessible components |
+| Package Manager | Bun | Frontend dependency management |
+| Backend | FastAPI (Python 3.12+) | REST API service |
+| Database | SQLite / PostgreSQL | Relational data storage |
+| ORM | SQLAlchemy | Database access and migrations |
+| Validation | Pydantic | Request/response schema validation |
+| Auth | JWT + bcrypt | Token authentication and password hashing |
+| Gateway | Nginx | Frontend serving and rate-limiting config |
+| Container | Docker + Docker Compose | Reproducible local and production runtime |
+| CI/CD | GitHub Actions + Railway | Automated test and deployment |
 
-#### Frontend
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Docker Desktop
+- Docker Compose
+- Python 3.12+
+- Bun
+- Git
+
+### Run Locally with Docker Compose
+
+```bash
+# Clone repository
+git clone https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit.git
+cd cc-kelompok-a-nyawit
+
+# Copy environment example
+cp .env.example .env
+# Edit .env with your values
+
+# Start all services
+docker compose up -d --build
+
+# Verify
+docker compose ps
+curl http://localhost/api/v1/health
+```
+
+Open http://localhost in your browser.
+
+### Run Backend Without Docker
+
+```bash
+cd backend
+python -m venv .venv
+.\.venv\Scripts\activate# Windows
+# source .venv/bin/activate# Linux/macOS
+
+pip install -r requirements-prod.txt
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Backend API: http://localhost:8000/api/v1
+Swagger UI: http://localhost:8000/api/v1/docs
+
+### Run Frontend Without Docker
+
 ```bash
 cd frontend
 bun install
 bun dev
 ```
-Aplikasi frontend berjalan di: **http://localhost:5173/**
 
-Backend harus berjalan secara terpisah (lihat bagian Backend di bawah).
+Frontend: http://localhost:5173
 
-#### Backend dengan Docker
-```bash
-docker compose up -d --build
+## 📡 API Documentation
+
+Base API path: `/api/v1`
+
+### Authentication
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| POST | `/auth/register` | Register user baru | ❌ |
+| POST | `/auth/login` | Login, returns JWT token | ❌ |
+| GET | `/auth/me` | Current authenticated user | ✅ |
+
+### Users
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/users` | List users | Manager/Admin |
+| GET | `/users/{id}` | Get user with created assets | Manager/Admin |
+| POST | `/users` | Create user | Manager/Admin |
+| PUT | `/users/{id}` | Update user | Manager/Admin |
+| DELETE | `/users/{id}` | Delete user | Manager/Admin |
+
+### Assets
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/assets` | List assets, optional `status` and `category_id` filters | ❌ |
+| POST | `/assets` | Create asset | ✅ |
+| GET | `/assets/{id}` | Get asset by ID | ❌ |
+| PUT | `/assets/{id}` | Update asset | ✅ |
+| DELETE | `/assets/{id}` | Delete asset | ✅ |
+
+### Categories
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/categories` | List categories | ❌ |
+| POST | `/categories` | Create category | ✅ |
+| GET | `/categories/{id}` | Get category | ❌ |
+| PUT | `/categories/{id}` | Update category | ✅ |
+| DELETE | `/categories/{id}` | Delete category | ✅ |
+
+### Locations
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/locations` | List locations with asset count | ❌ |
+| POST | `/locations` | Create location | ✅ |
+| GET | `/locations/{id}` | Get location with asset count | ❌ |
+| PUT | `/locations/{id}` | Update location | ✅ |
+| DELETE | `/locations/{id}` | Delete location | ✅ |
+
+### Asset Types
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/asset-types` | List asset types | ❌ |
+| POST | `/asset-types` | Create asset type | ✅ |
+| PUT | `/asset-types/{id}` | Update asset type | ✅ |
+| DELETE | `/asset-types/{id}` | Delete asset type | ✅ |
+
+### Borrow Logs
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| POST | `/borrow-logs` | Borrow asset | Manager/Admin |
+| POST | `/borrow-logs/{id}/return` | Return borrowed asset | Manager/Admin |
+| GET | `/borrow-logs` | List borrow logs | ✅ |
+| GET | `/borrow-logs/asset/{asset_id}` | List borrow logs by asset | ✅ |
+
+### Transactions
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/transactions` | List transactions | ✅ |
+| POST | `/transactions` | Create transaction | ✅ |
+| GET | `/transactions/{id}` | Get transaction | ✅ |
+| PUT | `/transactions/{id}` | Update transaction | ✅ |
+| DELETE | `/transactions/{id}` | Delete transaction | ✅ |
+
+### Conditions
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/conditions` | List condition summaries with asset counts | ✅ |
+| GET | `/conditions/{condition_name}` | Get assets by condition | ✅ |
+| PUT | `/conditions/{condition_name}/update-description` | Update condition description | ✅ |
+
+### Health
+
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/api/v1/health` | Backend health check | ❌ |
+
+### Via Gateway / Port 80
+
+Production frontend is served on port 80. API calls use the configured backend origin. The gateway config in `backend/nginx.conf` includes rate limiting for:
+
+- `auth_limit`: 5 requests/second for login/register
+- `api_limit`: 20 requests/second for API routes
+- `general_limit`: 30 requests/second for general routes and frontend
+
+## 🔐 Security
+
+- JWT authentication with expiry
+- bcrypt password hashing
+- Rate limiting in Nginx gateway config
+- Pydantic input validation for request bodies
+- CORS configured with `ALLOW_ORIGINS`
+- Secrets loaded from environment variables
+- Production `SECRET_KEY` validation
+- Role-based access control for admin and manager operations
+
+## 📊 Monitoring & Operations
+
+- Docker healthcheck for backend API
+- `/api/v1/health` endpoint for runtime health checks
+- Structured application logs through Python logging
+- Nginx gateway config includes rate-limiting and JSON 429 response
+- Railway production deployment uses environment variables and managed PostgreSQL
+
+## 👥 Tim
+
+| Nama | NIM | Peran | Kontribusi Utama |
+|---|---:|---|---|
+| Ilham Ahmad Fahriji | 10231042 | Lead Backend & Lead DevOps | Backend API, JWT auth, database, Docker, Nginx gateway, deployment |
+| Putu Ngurah Semara | 10231075 | Lead Frontend & Lead QA & Docs | React UI, API integration, dashboard, testing, documentation |
+
+## 📄 Documentation
+
+- [Deployment Guide](docs/deployment-guide.md)
+- [API Contract](docs/api-contract.md)
+- [Release Notes Milestone 3](docs/release-notes-m3.md)
+- [UAS Presentation Outline](docs/uas-presentation-outline.md)
+
+## 📅 Roadmap
+
+| Week | Target | Status |
+|---:|---|---|
+| 1 | Setup & Hello World | ✅ |
+| 2 | REST API + Database | ✅ |
+| 3 | React Frontend | ✅ |
+| 4 | Full-Stack Integration + Auth | ✅ |
+| 5–7 | Docker & Compose | ✅ |
+| 8 | UTS Demo (Milestone 1) | ✅ |
+| 9–11 | CI/CD & Cloud Deployment | ✅ |
+| 12–14 | Gateway, monitoring, and operational hardening | ✅ |
+| 15 | Final Polish & Security | ✅ |
+| 16 | UAS Demo (Milestone 3) | ⬜ |
+
+## 🧪 Default Users
+
+After database seeding, use these development users:
+
+| Role | Username | Password |
+|---|---|---|
+| Admin | `admin` | `admin123` |
+| IT Staff | `it` | `it123` |
+| Tech Support | `tech` | `tech123` |
+
+Change default passwords before production use.
+
+## 🧹 Code Quality
+
+Backend formatter configuration is available in `backend/pyproject.toml`:
+
+```toml
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
 ```
 
-#### Backend tanpa Docker
-```bash
-cd backend
-python -m venv .venv
-.venv\Scripts\activate  # Windows
-# source .venv/bin/activate  # Linux/Mac
-pip install -r requirements.txt
+Frontend formatter configuration is available in `frontend/.prettierrc.json`.
 
-# Buat database SQLite atau configure PostgreSQL
-# Untuk development: gunakan `--reload` agar server otomatis restart saat kode berubah
-# (Hanya untuk development)
-uvicorn app.main:app --reload
+## 📦 Project Structure
 
-# Untuk produksi: jalankan tanpa `--reload` dan gunakan process manager atau container
-# Contoh (langsung menjalankan uvicorn untuk production):
-# uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
-```
-
-Backend API: **http://localhost:8000**
-
----
-
-### Produksi dengan Docker (Tiga Service Terpisah)
-
-#### Prerequisites
-- Docker Desktop terinstall
-- Docker Compose terinstall
-
-#### Langkah Menjalankan
-```bash
-# Clone dan masuk ke direktori project
-git clone https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit.git
-cd cc-kelompok-a-nyawit
-
-# Build dan jalankan tiga service terpisah
-docker compose up -d --build
-
-# Cek status container
-docker compose ps
-```
-
-#### Akses Aplikasi
-
-| Service | URL | Keterangan |
-|---------|-----|-----------|
-| Frontend | https://manajemenaset.up.railway.app | Halaman utama (React) |
-| API | https://manajemenaset.up.railway.app/api/v1 | Backend API |
-| Swagger UI | https://manajemenaset.up.railway.app/api/v1/docs | Dokumentasi API Interaktif |
-| ReDoc | https://manajemenaset.up.railway.app/api/v1/redoc | Dokumentasi API (ReDoc) |
-
-### Deploy ke Railway
-
-Deployment production dijalankan langsung oleh Railway auto-deploy dari GitHub. Jadi workflow CD GitHub Actions tidak dipakai untuk proyek ini.
-
-Gunakan tiga service terpisah:
-1. **Frontend**: set root ke folder `frontend/` dan build dari [frontend/Dockerfile](frontend/Dockerfile).
-2. **Backend**: set root ke folder `backend/` dan build dari [backend/Dockerfile](backend/Dockerfile).
-3. **Database**: pakai service PostgreSQL Railway, lalu isi `DATABASE_URL` di backend dengan connection string PostgreSQL dari Railway.
-
-Untuk frontend, set `FRONTEND_API_BASE_URL` ke URL publik backend Railway, misalnya `https://manajemenaset.up.railway.app/api/v1`.
-Untuk backend, set `DATABASE_URL` ke URL PostgreSQL Railway, misalnya `postgresql+psycopg://...`.
-
-#### Default Users
-Setelah container berjalan, sistem membuat user default:
-- **Admin:** username=`admin`, password=`admin123`
-- **IT Staff:** username=`it`, password=`it123`
-- **Tech Support:** username=`tech`, password=`tech123`
-
-**PENTING:** Ganti password default setelah login pertama!
-
-#### Hentikan Container
-```bash
-docker compose down
-```
-
-Untuk menghapus volume data:
-```bash
-docker compose down -v
-```
-
----
-
-## Troubleshooting Docker
-
-### Masalah: Container Selalu Restart Loop
-
-**Gejala:** Container terus mencoba restart
-
-**Penyebab:** Health check gagal atau service belum selesai start
-
-**Solusi:**
-1. Pastikan service database sudah siap sebelum backend start.
-2. Cek logs dengan `docker compose logs`.
-3. Untuk frontend, pastikan `FRONTEND_API_BASE_URL` mengarah ke backend yang benar.
-
-### Masalah: 502 Bad Gateway
-
-**Penyebab:** Frontend tidak bisa mengakses backend.
-
-**Solusi:**
-1. Cek backend berjalan di port 8000.
-2. Pastikan `FRONTEND_API_BASE_URL` mengarah ke URL backend yang benar.
-3. Saat Railway, pastikan URL backend publik sudah dipakai, bukan `localhost`.
-
-### Masalah: Database Error
-
-**Penyebab:** Permission atau path database salah
-
-**Solusi:**
-1. Cek folder data ada dan dapat ditulis:
-```bash
-ls -la data/
-```
-2. Jika menggunakan Docker Desktop pada Windows, gunakan WSL2 backend
-
----
-
-## Struktur API
-
-### Endpoints
-
-| Method | Endpoint | Deskripsi |
-|--------|----------|-----------|
-| GET | / | Health check root |
-| GET | /api/v1/health | Health check API |
-| POST | /api/v1/auth/register | Register user baru |
-| POST | /api/v1/auth/login | Login |
-| GET | /api/v1/auth/me | Get current user |
-| GET | /api/v1/users | List users (admin) |
-| GET | /api/v1/categories | List kategori |
-| POST | /api/v1/categories | Create kategori |
-| GET | /api/v1/locations | List lokasi |
-| POST | /api/v1/locations | Create lokasi |
-| GET | /api/v1/assets | List aset |
-| POST | /api/v1/assets | Create aset |
-| GET | /api/v1/assets/{id} | Get aset |
-| PUT | /api/v1/assets/{id} | Update aset |
-| DELETE | /api/v1/assets/{id} | Delete aset |
-| GET | /api/v1/borrow-logs | List log peminjaman |
-| POST | /api/v1/borrow-logs | Create log peminjaman |
-| GET | /api/v1/conditions | List kondisi aset |
-
-### Role & Permissions
-
-| Endpoint | Admin | Manager | User |
-|----------|-------|---------|------|
-| GET categories | ✅ | ✅ | ✅ |
-| POST categories | ✅ | ✅ | ❌ |
-| PUT/DELETE categories | ✅ | ✅ | ❌ |
-| GET assets | ✅ | ✅ | ✅ |
-| POST/PUT/DELETE assets | ✅ | ✅ | ❌ |
-| GET borrow-logs | ✅ | ✅ | ✅ |
-| POST borrow-logs | ✅ | ✅ | ❌ |
-| GET users | ✅ | ✅ | ❌ |
-| POST/PUT/DELETE users | ✅ | ❌ | ❌ |
-
----
-
-## Contoh Penggunaan API
-
-### 1. Login
-```bash
-curl -X POST "http://localhost:8000/api/v1/auth/login" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=admin&password=admin123"
-```
-
-Response:
-```json
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIs...",
-  "token_type": "bearer",
-  "user": {
-    "id": 1,
-    "username": "admin",
-    "email": "admin@company.com",
-    "role": "admin"
-  }
-}
-```
-
-### 2. Menggunakan Token
-```bash
-curl -X GET "http://localhost:8000/api/v1/assets" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..."
-```
-
-### 3. Create Aset Baru
-```bash
-curl -X POST "http://localhost:8000/api/v1/assets" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIs..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "asset_code": "LAP-001",
-    "name": "MacBook Pro M3",
-    "type": "Laptop",
-    "category_id": 1,
-    "location_id": 1,
-    "status": "Available",
-    "condition": "Excellent"
-  }'
-```
-
----
-
-## Fitur Utama
-
-### 1. Manajemen Data Barang (Asset Inventory)
-- Pencatatan detail teknis (Serial Number, Brand, Model, Spesifikasi)
-- ID unik untuk setiap aset
-
-### 2. Kategorisasi Aset
-- Hardware (Server, Laptop, Desktop)
-- Software (Lisensi)
-- Peripherals (Monitor, Keyboard, dll)
-
-### 3. Pemetaan Lokasi Fisik
-- Rack di data center
-- Ruang kantor
-- Gudang penyimpanan
-
-### 4. Status Aset
-- Available (Tersedia)
-- In Use (Sedang Dipakai)
-- Under Maintenance (Perbaikan)
-- Retired (Decommissioned)
-
-### 5. Kondisi Aset
-- Excellent
-- Good
-- Fair
-- Poor
-
-### 6. Log Peminjaman
-Riwayat peminjaman dan pengembalian aset
-
-### 7. Autentikasi JWT
-- Role-based Access Control (Admin, Manager, User)
-- Token-based authentication
-
----
-
-## Environment Variables
-
-### Docker
-| Variable | Default | Deskripsi |
-|----------|---------|-----------|
-| DATABASE_URL | sqlite:////data/it_asset.db | Database connection string |
-| SECRET_KEY | your-super-secret-key-change-in-production | JWT secret key |
-| APP_ENV | production | Environment (development/production) |
-
-### Development (Backend)
-Buat file `.env` di folder `backend/` (contoh):
-```env
-APP_NAME=IT Asset Management API
-APP_ENV=development
-DATABASE_URL=sqlite:///data/it_asset.db
-# Ganti dengan string acak kuat untuk production (minimal 32 karakter)
-SECRET_KEY=CHANGE_ME_USE_RANDOM_STRING_MIN_32_CHARS
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-```
-
-## Production Security Checklist
-
-- Pastikan `SECRET_KEY`, `DATABASE_URL`, dan `ALLOW_ORIGINS` di-set di environment produksi.
-- Jangan gunakan `ALLOW_ORIGINS=*` di produksi — set ke domain frontend Anda.
-- Pastikan gateway Nginx rate limiting di-deploy di lingkungan produksi (lihat `backend/nginx.conf`).
-- Jangan menjalankan `uvicorn --reload` di produksi; gunakan proses manager atau container orchestration.
-
----
-
-## Struktur Folder
-
-```
+```text
 cc-kelompok-a-nyawit/
-├── frontend/                 # React Frontend
-│   ├── app/                 # Main app component
-│   ├── components/           # React components
-│   │   ├── ui/             # Reusable UI components
-│   │   ├── AssetTable.tsx  # Asset table
-│   │   └── MetricCards.tsx # Dashboard metrics
-│   ├── pages/               # Page components
-│   │   ├── LoginPage.tsx
-│   │   ├── AssetManagementPage.tsx
-│   │   └── ...
-│   ├── lib/                # Utilities & API
-│   └── dist/               # Production build
-├── backend/                  # FastAPI Backend
-│   ├── app/
-│   │   ├── api/           # API routes
-│   │   ├── core/          # Config & Security
-│   │   ├── db/            # Database
-│   │   ├── models/        # SQLAlchemy models
-│   │   └── schemas/       # Pydantic schemas
-│   ├── database/          # SQL schema
-│   └── requirements.txt
-├── data/                    # SQLite database (created at runtime)
-├── docker-compose.yml       # Docker compose config
-├── Dockerfile             # Multi-stage Dockerfile
-└── README.md              # This file
+├── backend/# FastAPI backend
+│ ├── app/
+│ │ ├── api/
+│ │ ├── core/
+│ │ ├── db/
+│ │ ├── models/
+│ │ └── schemas/
+│ ├── nginx.conf# Gateway/rate-limiting config
+│ ├── pyproject.toml# Python formatter config
+│ └── Dockerfile
+├── frontend/ # React + Vite frontend
+│ ├── pages/
+│ ├── components/
+│ ├── hooks/
+│ ├── lib/
+│ ├── nginx.conf.template
+│ └── Dockerfile
+├── docs/ # Deployment, API, release, and presentation docs
+├── docker-compose.yml
+├── docker-compose.prod.yml
+└── README.md
 ```
 
----
+## 📝 Production Notes
 
-## Lisensi & Credits
-
-- Proyek ini merupakan bagian dari tugas Cloud Computing Kelompok A Nyawit.
-- **Framework:** React, FastAPI, SQLite/PostgreSQL, Nginx, Supervisord
-
-## Peran Tim
-
-### Ilham Ahmad Fahriji (10231042)
-**Lead Backend & Lead DevOps**
-- Merancang dan mengembangkan REST API dengan FastAPI
-- Mengimplementasikan sistem autentikasi JWT dan RBAC
-- Mengatur database dengan SQLAlchemy
-- Membuat Docker container dan docker-compose
-- Mengkonfigurasi Nginx sebagai reverse proxy
-- Mengelola deployment dan CI/CD
-
-### Putu Ngurah Semara (10231075)
-**Lead Frontend & Lead QA & Docs**
-- Merancang dan mengembangkan UI dengan React + TypeScript
-- Mengimplementasikan desain dengan Tailwind CSS dan Radix UI
-- Mengintegrasikan frontend dengan backend API
-- Membuat dokumentasi API dengan Swagger UI
-- Menguji fungsionalitas sistem secara menyeluruh
-- Menulis dokumentasi proyek dan user guide
-
----
-
-## Project Journey
-
-Aplikasi ini berevolusi dari sebuah sistem terpadu (monolith-like) menjadi arsitektur berbasis container (microservices-ready). Perubahan ini dilakukan untuk meningkatkan skalabilitas dan memudahkan deployment di lingkungan cloud (seperti Railway).
-
-1. **Fase 1: Monolith Sederhana**
-   Pada awalnya, frontend dan backend berjalan di satu environment pengembangan menggunakan SQLite lokal untuk penyimpanan sementara, tanpa pembagian service yang kaku.
-
-2. **Fase 2: Pemisahan Frontend & Backend**
-   Memisahkan proses build dan run menjadi dua entitas independen (React Vite & FastAPI). Keduanya dikomunikasikan melalui REST API yang terdefinisi dengan jelas menggunakan OpenAPI/Swagger.
-
-3. **Fase 3: Containerization & Docker**
-   Setiap komponen (*Frontend*, *Backend*, *Database*) dibungkus menjadi Docker *container* terpisah menggunakan `docker-compose`. Hal ini memastikan konsistensi dari tahap *development* hingga ke *production*.
-
-4. **Fase 4: Microservices-Ready & Cloud Deployment**
-   Sistem diatur ulang sehingga dapat di-*deploy* secara mandiri (*independent scaling*). Frontend dikelola oleh *web server* statis (Nginx), Backend berjalan sebagai API *gateway/service* mandiri, dan *Database* sepenuhnya dipisahkan menjadi *managed service* PostgreSQL di cloud (Railway).
+- Use a strong `SECRET_KEY` in production.
+- Use Railway PostgreSQL or another managed PostgreSQL service for production.
+- Set `ALLOW_ORIGINS` to trusted frontend domains only.
+- Do not use `uvicorn --reload` in production.
+- Review `backend/nginx.conf` before deploying Nginx as the public gateway.

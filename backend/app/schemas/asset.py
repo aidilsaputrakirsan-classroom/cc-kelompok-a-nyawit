@@ -1,29 +1,49 @@
+"""Pydantic schemas for asset management with strict input validation."""
+
 from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from app.models.asset import AssetStatus, AssetCondition
+from app.models.asset import AssetCondition, AssetStatus
 
 
 class AssetBase(BaseModel):
-    asset_code: str
-    name: str = Field(max_length=200)
-    type: str
-    category_id: int
-    location: str | None = None
-    location_id: int | None = None
+    asset_code: str = Field(..., min_length=1, max_length=100)
+    name: str = Field(..., min_length=1, max_length=200)
+    type: str = Field(..., min_length=1, max_length=100)
+    category_id: int = Field(..., ge=1)
+    location: str | None = Field(default=None, max_length=200)
+    location_id: int | None = Field(default=None, ge=1)
     status: AssetStatus = AssetStatus.AVAILABLE
-    quantity: int = Field(default=1, ge=0)
-    assigned_to: str | None = None
+    quantity: int = Field(default=1, ge=0, le=999_999)
+    assigned_to: str | None = Field(default=None, max_length=200)
     purchase_date: date | None = None
     last_update: date | None = None
     condition: AssetCondition = AssetCondition.GOOD
-    serial_number: str | None = None
-    brand: str | None = None
-    model: str | None = None
-    ip_address: str | None = None
-    mac_address: str | None = None
+    serial_number: str | None = Field(default=None, max_length=200)
+    brand: str | None = Field(default=None, max_length=100)
+    model: str | None = Field(default=None, max_length=100)
+    ip_address: str | None = Field(default=None, max_length=45)
+    mac_address: str | None = Field(default=None, max_length=17)
     created_by: int | None = None
+
+    @field_validator("asset_code", "name", "type")
+    @classmethod
+    def strip_and_validate_required_string(cls, value: str) -> str:
+        if isinstance(value, str):
+            value = value.strip()
+            if not value:
+                raise ValueError("Field ini tidak boleh kosong")
+        return value
+
+    @field_validator("location", "assigned_to", "serial_number", "brand", "model")
+    @classmethod
+    def strip_optional_strings(cls, value: str | None) -> str | None:
+        if isinstance(value, str):
+            value = value.strip()
+            if not value:
+                return None
+        return value
 
 
 class AssetCreate(AssetBase):
@@ -31,24 +51,42 @@ class AssetCreate(AssetBase):
 
 
 class AssetUpdate(BaseModel):
-    asset_code: str | None = None
-    name: str | None = Field(default=None, max_length=200)
-    type: str | None = None
-    category_id: int | None = None
-    location: str | None = None
-    location_id: int | None = None
+    asset_code: str | None = Field(default=None, min_length=1, max_length=100)
+    name: str | None = Field(default=None, min_length=1, max_length=200)
+    type: str | None = Field(default=None, min_length=1, max_length=100)
+    category_id: int | None = Field(default=None, ge=1)
+    location: str | None = Field(default=None, max_length=200)
+    location_id: int | None = Field(default=None, ge=1)
     status: AssetStatus | None = None
-    quantity: int | None = Field(default=None, ge=0)
-    assigned_to: str | None = None
+    quantity: int | None = Field(default=None, ge=0, le=999_999)
+    assigned_to: str | None = Field(default=None, max_length=200)
     purchase_date: date | None = None
     last_update: date | None = None
     condition: AssetCondition | None = None
-    serial_number: str | None = None
-    brand: str | None = None
-    model: str | None = None
-    ip_address: str | None = None
-    mac_address: str | None = None
+    serial_number: str | None = Field(default=None, max_length=200)
+    brand: str | None = Field(default=None, max_length=100)
+    model: str | None = Field(default=None, max_length=100)
+    ip_address: str | None = Field(default=None, max_length=45)
+    mac_address: str | None = Field(default=None, max_length=17)
     created_by: int | None = None
+
+    @field_validator("asset_code", "name", "type")
+    @classmethod
+    def strip_and_validate_optional_string(cls, value: str | None) -> str | None:
+        if isinstance(value, str):
+            value = value.strip()
+            if not value:
+                raise ValueError("Field ini tidak boleh kosong")
+        return value
+
+    @field_validator("location", "assigned_to", "serial_number", "brand", "model")
+    @classmethod
+    def strip_optional_strings(cls, value: str | None) -> str | None:
+        if isinstance(value, str):
+            value = value.strip()
+            if not value:
+                return None
+        return value
 
 
 class CategoryBrief(BaseModel):

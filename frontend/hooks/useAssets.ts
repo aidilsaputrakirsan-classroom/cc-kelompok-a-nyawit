@@ -34,9 +34,7 @@ export function useAssets(options: UseAssetsOptions = {}, realtime: boolean = fa
             setError(null);
             // Ensure categories are loaded first
             await fetchCategories();
-            console.log('Fetching assets from API...');
             const data = await AssetAPI.getAll(options);
-            console.log('Assets fetched:', data.length);
             setAssets(data);
         } catch (err) {
             const message = err instanceof Error ? err.message : 'Failed to fetch assets';
