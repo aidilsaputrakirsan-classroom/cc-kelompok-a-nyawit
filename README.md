@@ -307,8 +307,4 @@ cc-kelompok-a-nyawit/
 
 ## 📝 Production Notes
 
-- Use a strong `SECRET_KEY` in production.
-- Use Railway PostgreSQL or another managed PostgreSQL service for production.
-- Set `ALLOW_ORIGINS` to trusted frontend domains only.
-- Do not use `uvicorn --reload` in production.
-- Review `backend/nginx.conf` before deploying Nginx as the public gateway.
+
