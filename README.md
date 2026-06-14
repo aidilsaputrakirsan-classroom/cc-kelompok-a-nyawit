@@ -256,9 +256,9 @@ After database seeding, use these development users:
 
 | Role | Username | Password |
 |---|---|---|
-| Admin | `admin` | `Admin123` |
-| IT Staff | `it` | `Itstaff123` |
-| Tech Support | `tech` | `Techsup123` |
+| Admin | `admin` | `admin123` |
+| IT Staff | `it` | `it123` |
+| Tech Support | `tech` | `tech123` |
 
 Change default passwords before production use.
 

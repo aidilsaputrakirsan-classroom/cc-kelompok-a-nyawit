@@ -128,9 +128,9 @@ def seed_admin_user(db: Session) -> None:
     
     db.commit()
     logger.info("Created default users:")
-    logger.info("  - admin / admin123")
-    logger.info("  - it / it123")
-    logger.info("  - tech / tech123")
+    logger.info("  - admin / Admin123")
+    logger.info("  - it / Itstaff123")
+    logger.info("  - tech / Techsup123")
     logger.info("IMPORTANT: Please change the default passwords after first login!")
 
 
