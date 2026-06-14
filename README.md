@@ -3,7 +3,7 @@
 > Aplikasi cloud-native untuk manajemen aset dan inventory IT, dibangun dengan FastAPI, React + Vite, Docker Compose, dan Nginx gateway sebagai proyek mata kuliah Komputasi Awan — Institut Teknologi Kalimantan.
 
 ![CI](https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit/actions/workflows/ci.yml/badge.svg)
-![CD](https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit/actions/workflows/ci.yml/badge.svg?branch=main)
+![CD](https://github.com/aidilsaputrakirsan-classroom/cc-kelompok-a-nyawit/actions/workflows/cd.yml/badge.svg)
 
 ## 🏗️ Architecture
 
@@ -256,9 +256,9 @@ After database seeding, use these development users:
 
 | Role | Username | Password |
 |---|---|---|
-| Admin | `admin` | `admin123` |
-| IT Staff | `it` | `it123` |
-| Tech Support | `tech` | `tech123` |
+| Admin | `admin` | `Admin123` |
+| IT Staff | `it` | `Itstaff123` |
+| Tech Support | `tech` | `Techsup123` |
 
 Change default passwords before production use.
 
@@ -289,7 +289,6 @@ cc-kelompok-a-nyawit/
 │ │ ├── db/
 │ │ ├── models/
 │ │ └── schemas/
-│ ├── nginx.conf# Gateway/rate-limiting config
 │ ├── pyproject.toml# Python formatter config
 │ └── Dockerfile
 ├── frontend/ # React + Vite frontend
@@ -299,11 +298,21 @@ cc-kelompok-a-nyawit/
 │ ├── lib/
 │ ├── nginx.conf.template
 │ └── Dockerfile
-├── docs/ # Deployment, API, release, and presentation docs
+├── nginx.conf# Gateway/rate-limiting config
+├── docs/# Deployment, API, release, and presentation docs
 ├── docker-compose.yml
 ├── docker-compose.prod.yml
 └── README.md
 ```
+
+## Production API
+
+Production API is available at:
+- **API Base**: `https://backend-production-1fe2.up.railway.app/api/v1`
+- **Swagger UI**: `https://backend-production-1fe2.up.railway.app/api/v1/docs`
+- **Health Check**: `https://backend-production-1fe2.up.railway.app/api/v1/health`
+
+Swagger UI is enabled in production. Access it directly at `/api/v1/docs`.
 
 ## 📝 Production Notes
 
