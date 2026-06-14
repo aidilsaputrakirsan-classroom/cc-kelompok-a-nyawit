@@ -9,18 +9,17 @@ on:
     branches: ["main", "master", "develop"]
     paths:
       - "backend/**"
+      - "frontend/**"
       - "docker-compose.yml"
       - "Dockerfile"
-      - "docker-compose.yml"
       - ".github/workflows/ci.yml"
   pull_request:
     branches: ["main", "master", "develop"]
     paths:
       - "backend/**"
-      - "docker-compose.yml"
       - "frontend/**"
-      - "Dockerfile"
       - "docker-compose.yml"
+      - "Dockerfile"
       - ".github/workflows/ci.yml"
 
 permissions:
@@ -131,11 +130,20 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image
+      - name: Build backend image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./backend
           push: false
-          tags: cc-kelompok-a-nyawit-app:ci-${{ github.sha }}
+          tags: cc-kelompok-a-nyawit-app-backend:ci-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: false
+          tags: cc-kelompok-a-nyawit-app-frontend:ci-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

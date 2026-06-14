@@ -7,7 +7,7 @@ def _login_as_admin(client: TestClient) -> str:
         json={
             "username": "adminsmoke",
             "email": "adminsmoke@example.com",
-            "password": "password123",
+            "password": "Password123",
             "full_name": "Admin Smoke",
         },
     )
@@ -15,7 +15,7 @@ def _login_as_admin(client: TestClient) -> str:
 
     login_response = client.post(
         "/api/v1/auth/login",
-        json={"username": "adminsmoke", "password": "password123"},
+        json={"username": "adminsmoke", "password": "Password123"},
     )
     assert login_response.status_code == 200
     token = login_response.json()["access_token"]

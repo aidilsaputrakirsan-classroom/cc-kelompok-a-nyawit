@@ -17,7 +17,7 @@ def test_list_users_as_admin(client, db_session):
     admin = User(
         username="admin",
         email="admin@example.com",
-        hashed_password=get_password_hash("admin123"),
+        hashed_password=get_password_hash("Admin123"),
         role=UserRole.ADMIN,
         is_active=True,
     )
@@ -27,14 +27,14 @@ def test_list_users_as_admin(client, db_session):
     user = User(
         username="user",
         email="user@example.com",
-        hashed_password=get_password_hash("user123"),
+        hashed_password=get_password_hash("User123"),
         role=UserRole.USER,
         is_active=True,
     )
     db_session.add(user)
     db_session.commit()
 
-    token = get_token(client, "admin", "admin123")
+    token = get_token(client, "admin", "Admin123")
     
     response = client.get(
         "/api/v1/users",
@@ -51,14 +51,14 @@ def test_list_users_as_user_forbidden(client, db_session):
     user = User(
         username="user",
         email="user@example.com",
-        hashed_password=get_password_hash("user123"),
+        hashed_password=get_password_hash("User123"),
         role=UserRole.USER,
         is_active=True,
     )
     db_session.add(user)
     db_session.commit()
 
-    token = get_token(client, "user", "user123")
+    token = get_token(client, "user", "User123")
     
     response = client.get(
         "/api/v1/users",
@@ -73,14 +73,14 @@ def test_create_user_as_admin(client, db_session):
     admin = User(
         username="admin",
         email="admin@example.com",
-        hashed_password=get_password_hash("admin123"),
+        hashed_password=get_password_hash("Admin123"),
         role=UserRole.ADMIN,
         is_active=True,
     )
     db_session.add(admin)
     db_session.commit()
 
-    token = get_token(client, "admin", "admin123")
+    token = get_token(client, "admin", "Admin123")
     
     response = client.post(
         "/api/v1/users",
@@ -88,7 +88,7 @@ def test_create_user_as_admin(client, db_session):
         json={
             "username": "newuser",
             "email": "new@example.com",
-            "password": "newpass123",
+            "password": "Newpass123",
             "full_name": "New User",
             "role": "manager",
         },
@@ -105,26 +105,26 @@ def test_update_user_as_admin(client, db_session):
     admin = User(
         username="admin",
         email="admin@example.com",
-        hashed_password=get_password_hash("admin123"),
+        hashed_password=get_password_hash("Admin123"),
         role=UserRole.ADMIN,
         is_active=True,
     )
     db_session.add(admin)
-    
+
     # Create user to update
     user = User(
         username="toupdate",
         email="toupdate@example.com",
-        hashed_password=get_password_hash("pass123"),
+        hashed_password=get_password_hash("Testpass123"),
         role=UserRole.USER,
         is_active=True,
     )
     db_session.add(user)
     db_session.commit()
-    
+
     user_id = user.id
 
-    token = get_token(client, "admin", "admin123")
+    token = get_token(client, "admin", "Admin123")
     
     response = client.put(
         f"/api/v1/users/{user_id}",
@@ -146,7 +146,7 @@ def test_delete_user_as_admin(client, db_session):
     admin = User(
         username="admin",
         email="admin@example.com",
-        hashed_password=get_password_hash("admin123"),
+        hashed_password=get_password_hash("Admin123"),
         role=UserRole.ADMIN,
         is_active=True,
     )
@@ -156,7 +156,7 @@ def test_delete_user_as_admin(client, db_session):
     user = User(
         username="todelete",
         email="todelete@example.com",
-        hashed_password=get_password_hash("pass123"),
+        hashed_password=get_password_hash("Testpass123"),
         role=UserRole.USER,
         is_active=True,
     )
@@ -165,7 +165,7 @@ def test_delete_user_as_admin(client, db_session):
     
     user_id = user.id
 
-    token = get_token(client, "admin", "admin123")
+    token = get_token(client, "admin", "Admin123")
     
     response = client.delete(
         f"/api/v1/users/{user_id}",
@@ -180,7 +180,7 @@ def test_admin_cannot_delete_self(client, db_session):
     admin = User(
         username="admin",
         email="admin@example.com",
-        hashed_password=get_password_hash("admin123"),
+        hashed_password=get_password_hash("Admin123"),
         role=UserRole.ADMIN,
         is_active=True,
     )
@@ -189,7 +189,7 @@ def test_admin_cannot_delete_self(client, db_session):
     
     admin_id = admin.id
 
-    token = get_token(client, "admin", "admin123")
+    token = get_token(client, "admin", "Admin123")
     
     response = client.delete(
         f"/api/v1/users/{admin_id}",

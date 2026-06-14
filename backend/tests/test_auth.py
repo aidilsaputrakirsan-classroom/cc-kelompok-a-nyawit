@@ -9,7 +9,7 @@ def test_register_first_user_becomes_admin(client):
         json={
             "username": "firstuser",
             "email": "first@example.com",
-            "password": "password123",
+            "password": "Password123",
             "full_name": "First User",
         },
     )
@@ -23,24 +23,22 @@ def test_register_first_user_becomes_admin(client):
 
 def test_register_second_user_not_admin(client, db_session):
     """Test that subsequent users don't become admin by default."""
-    # Create first user (admin)
     admin = User(
         username="admin",
         email="admin@example.com",
-        hashed_password=get_password_hash("admin123"),
+        hashed_password=get_password_hash("Admin123"),
         role=UserRole.ADMIN,
         is_active=True,
     )
     db_session.add(admin)
     db_session.commit()
 
-    # Register second user
     response = client.post(
         "/api/v1/auth/register",
         json={
             "username": "seconduser",
             "email": "second@example.com",
-            "password": "password123",
+            "password": "Password123",
             "full_name": "Second User",
         },
     )
@@ -51,23 +49,21 @@ def test_register_second_user_not_admin(client, db_session):
 
 def test_register_duplicate_username(client):
     """Test that duplicate usernames are rejected."""
-    # Register first user
     client.post(
         "/api/v1/auth/register",
         json={
             "username": "testuser",
             "email": "test1@example.com",
-            "password": "password123",
+            "password": "Password123",
         },
     )
 
-    # Try to register with same username
     response = client.post(
         "/api/v1/auth/register",
         json={
             "username": "testuser",
             "email": "test2@example.com",
-            "password": "password123",
+            "password": "Password456",
         },
     )
     assert response.status_code == 400
@@ -76,23 +72,21 @@ def test_register_duplicate_username(client):
 
 def test_register_duplicate_email(client):
     """Test that duplicate emails are rejected."""
-    # Register first user
     client.post(
         "/api/v1/auth/register",
         json={
             "username": "user1",
             "email": "duplicate@example.com",
-            "password": "password123",
+            "password": "Password123",
         },
     )
 
-    # Try to register with same email
     response = client.post(
         "/api/v1/auth/register",
         json={
             "username": "user2",
             "email": "duplicate@example.com",
-            "password": "password123",
+            "password": "Password456",
         },
     )
     assert response.status_code == 400
@@ -101,23 +95,21 @@ def test_register_duplicate_email(client):
 
 def test_login_success(client, db_session):
     """Test successful login."""
-    # Create user
     user = User(
         username="logintest",
         email="login@example.com",
-        hashed_password=get_password_hash("password123"),
+        hashed_password=get_password_hash("Password123"),
         role=UserRole.USER,
         is_active=True,
     )
     db_session.add(user)
     db_session.commit()
 
-    # Login
     response = client.post(
         "/api/v1/auth/login",
         json={
             "username": "logintest",
-            "password": "password123",
+            "password": "Password123",
         },
     )
     assert response.status_code == 200
@@ -129,18 +121,16 @@ def test_login_success(client, db_session):
 
 def test_login_wrong_password(client, db_session):
     """Test login with wrong password."""
-    # Create user
     user = User(
         username="wrongpass",
         email="wrong@example.com",
-        hashed_password=get_password_hash("password123"),
+        hashed_password=get_password_hash("Password123"),
         role=UserRole.USER,
         is_active=True,
     )
     db_session.add(user)
     db_session.commit()
 
-    # Try to login with wrong password
     response = client.post(
         "/api/v1/auth/login",
         json={
@@ -153,23 +143,21 @@ def test_login_wrong_password(client, db_session):
 
 def test_login_inactive_user(client, db_session):
     """Test login with inactive user."""
-    # Create inactive user
     user = User(
         username="inactive",
         email="inactive@example.com",
-        hashed_password=get_password_hash("password123"),
+        hashed_password=get_password_hash("Password123"),
         role=UserRole.USER,
         is_active=False,
     )
     db_session.add(user)
     db_session.commit()
 
-    # Try to login
     response = client.post(
         "/api/v1/auth/login",
         json={
             "username": "inactive",
-            "password": "password123",
+            "password": "Password123",
         },
     )
     assert response.status_code == 403
@@ -178,28 +166,25 @@ def test_login_inactive_user(client, db_session):
 
 def test_get_me(client, db_session):
     """Test getting current user info."""
-    # Create and login user
     user = User(
         username="meuser",
         email="me@example.com",
-        hashed_password=get_password_hash("password123"),
+        hashed_password=get_password_hash("Password123"),
         role=UserRole.USER,
         is_active=True,
     )
     db_session.add(user)
     db_session.commit()
 
-    # Login to get token
     login_response = client.post(
         "/api/v1/auth/login",
         json={
             "username": "meuser",
-            "password": "password123",
+            "password": "Password123",
         },
     )
     token = login_response.json()["access_token"]
 
-    # Get me
     response = client.get(
         "/api/v1/auth/me",
         headers={"Authorization": f"Bearer {token}"},
