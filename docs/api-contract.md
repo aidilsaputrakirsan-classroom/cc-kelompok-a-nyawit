@@ -8,7 +8,7 @@
 | Local Backend API | http://localhost:8000/api/v1 |
 | Local Swagger UI | http://localhost:8000/docs |
 | Production Frontend | https://manajemenaset.up.railway.app |
-| Production API (Backend) | https://backend-production-1fe2.up.railway.app/api/v1 |
+| Production API (Backend) | https://backend-production-1fe2.up.railway.app/ |
 | Production Swagger UI | https://backend-production-1fe2.up.railway.app/docs |
 
 **Note**: On Railway, backend and frontend are deployed as separate services. Swagger UI is accessible at the backend URL (`/docs`). The frontend uses `FRONTEND_API_BASE_URL` environment variable to connect to the backend.
